@@ -1,5 +1,5 @@
 export type Runtime = "pi" | "codex" | "claude-code";
-export type ExecutionBackend = "persistent" | "fake_cloud_run";
+export type ExecutionBackend = "persistent";
 export type SessionState = "blocked" | "queued" | "preparing" | "running" | "needs-input" | "ready" | "succeeded" | "failed" | "no-change" | "cancelled";
 export type RunState = "blocked" | "queued" | "running" | "succeeded" | "failed" | "partial" | "cancelled";
 
@@ -17,7 +17,6 @@ export interface ExecutionProfile {
   enabled: boolean;
   healthy: boolean;
   health_reason?: string;
-  synthetic_worker_id: string;
 }
 
 export interface ExecutionSnapshot {
@@ -29,7 +28,7 @@ export interface ExecutionSnapshot {
   model: string;
   timeout_seconds: number;
   resource_class: string;
-  commit_resolution_policy: "resolve_per_attempt" | "frozen_commit";
+  commit_resolution_policy: "resolve_per_attempt";
 }
 
 export interface TaskRepository {

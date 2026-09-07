@@ -410,9 +410,7 @@ type WorkUpdatePage struct {
 const (
 	PersistentAutoProfileID = "persistent-auto"
 	BackendPersistent       = "persistent"
-	BackendFakeCloudRun     = "fake_cloud_run"
 	CommitResolvePerAttempt = "resolve_per_attempt"
-	CommitFrozen            = "frozen_commit"
 )
 
 type ExecutionSnapshot struct {
@@ -428,43 +426,21 @@ type ExecutionSnapshot struct {
 }
 
 type ExecutionProfile struct {
-	ID                string    `json:"id"`
-	Name              string    `json:"name"`
-	Kind              string    `json:"kind"`
-	Version           int       `json:"version"`
-	Runtime           string    `json:"runtime"`
-	Provider          string    `json:"provider"`
-	Model             string    `json:"model"`
-	TimeoutSeconds    int       `json:"timeout_seconds"`
-	ResourceClass     string    `json:"resource_class"`
-	MaxConcurrent     int       `json:"max_concurrent"`
-	Enabled           bool      `json:"enabled"`
-	Healthy           bool      `json:"healthy"`
-	HealthReason      string    `json:"health_reason,omitempty"`
-	FakeOutcome       string    `json:"fake_outcome,omitempty"`
-	FakeResult        string    `json:"fake_result,omitempty"`
-	FakeError         string    `json:"fake_error,omitempty"`
-	SyntheticWorkerID string    `json:"synthetic_worker_id"`
-	CreatedAt         time.Time `json:"created_at"`
-	UpdatedAt         time.Time `json:"updated_at"`
-}
-
-type SaveExecutionProfileRequest struct {
-	Name            string `json:"name"`
-	Kind            string `json:"kind"`
-	Runtime         string `json:"runtime"`
-	Provider        string `json:"provider"`
-	Model           string `json:"model"`
-	TimeoutSeconds  int    `json:"timeout_seconds"`
-	ResourceClass   string `json:"resource_class"`
-	MaxConcurrent   int    `json:"max_concurrent"`
-	Enabled         bool   `json:"enabled"`
-	Healthy         bool   `json:"healthy"`
-	HealthReason    string `json:"health_reason,omitempty"`
-	FakeOutcome     string `json:"fake_outcome,omitempty"`
-	FakeResult      string `json:"fake_result,omitempty"`
-	FakeError       string `json:"fake_error,omitempty"`
-	ExpectedVersion int    `json:"expected_version,omitempty"`
+	ID             string    `json:"id"`
+	Name           string    `json:"name"`
+	Kind           string    `json:"kind"`
+	Version        int       `json:"version"`
+	Runtime        string    `json:"runtime"`
+	Provider       string    `json:"provider"`
+	Model          string    `json:"model"`
+	TimeoutSeconds int       `json:"timeout_seconds"`
+	ResourceClass  string    `json:"resource_class"`
+	MaxConcurrent  int       `json:"max_concurrent"`
+	Enabled        bool      `json:"enabled"`
+	Healthy        bool      `json:"healthy"`
+	HealthReason   string    `json:"health_reason,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
 }
 
 type ExecutionProfilePage struct {

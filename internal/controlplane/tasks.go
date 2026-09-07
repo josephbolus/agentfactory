@@ -392,20 +392,6 @@ func validateTaskRepositories(ctx context.Context, tx *sql.Tx, ids []string) err
 	return nil
 }
 
-func validateTaskExecutionProfile(ctx context.Context, tx *sql.Tx, id string) error {
-	if id == "" {
-		return nil
-	}
-	var exists int
-	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM execution_profiles WHERE id = ?`, id).Scan(&exists); err != nil {
-		return unavailable(err)
-	}
-	if exists == 0 {
-		return invalid("execution_profile_not_found", "the selected execution profile does not exist")
-	}
-	return nil
-}
-
 func validateTaskWorkflow(ctx context.Context, tx *sql.Tx, repositoryIDs []string, workflowID string) error {
 	if workflowID == "" {
 		return nil
@@ -424,38 +410,6 @@ func validateTaskWorkflow(ctx context.Context, tx *sql.Tx, repositoryIDs []strin
 		if exists == 0 {
 			return conflict("workflow_not_found", fmt.Sprintf("workflow %s is not available for every selected repository", workflowID))
 		}
-	}
-	return nil
-}
-
-func validateOutcomeContractBackend(
-	ctx context.Context,
-	tx *sql.Tx,
-	contract protocol.OutcomeContract,
-	profileID string,
-) error {
-	if contract != protocol.OutcomeAgentUpdate || profileID == "" || profileID == protocol.PersistentAutoProfileID {
-		return nil
-	}
-	var backend string
-	err := tx.QueryRowContext(ctx, `
-		SELECT version.kind
-		FROM execution_profiles profile
-		JOIN execution_profile_versions version
-		  ON version.profile_id = profile.id AND version.version = profile.current_version
-		WHERE profile.id = ?
-	`, profileID).Scan(&backend)
-	if errors.Is(err, sql.ErrNoRows) {
-		return invalid("execution_profile_not_found", "the selected execution profile does not exist")
-	}
-	if err != nil {
-		return unavailable(err)
-	}
-	if backend != protocol.BackendPersistent {
-		return conflict(
-			"agent_update_backend_unsupported",
-			"agent_update requires the persistent execution backend",
-		)
 	}
 	return nil
 }
@@ -996,19 +950,13 @@ func (s *Store) admitTask(
 		if !profileReady {
 			blockedReason = profileBlockedReason
 		} else if materialized < snapshot.ConcurrencyLimit {
-			if execution.Backend == protocol.BackendPersistent {
-				selection, err = s.selectSessionRoute(ctx, tx, repository.ID, repository.RemoteIdentity, now, "", snapshot.Runtime)
-				blockedReason = "Waiting for a healthy compatible Worker with repository access."
-				if err == nil {
-					state, blockedReason, assigned = "queued", "", selection.workerID
-					materialized++
-				} else if !serviceErrorCode(err, "no_eligible_worker") {
-					return protocol.RunDetail{}, false, err
-				}
-			} else {
-				state, blockedReason, assigned = "queued", "", syntheticWorkerID(execution.ProfileID)
-				selection.workerID = assigned.(string)
+			selection, err = s.selectSessionRoute(ctx, tx, repository.ID, repository.RemoteIdentity, now, "", snapshot.Runtime)
+			blockedReason = "Waiting for a healthy compatible Worker with repository access."
+			if err == nil {
+				state, blockedReason, assigned = "queued", "", selection.workerID
 				materialized++
+			} else if !serviceErrorCode(err, "no_eligible_worker") {
+				return protocol.RunDetail{}, false, err
 			}
 		}
 		if _, err := tx.ExecContext(ctx, `
@@ -1127,58 +1075,6 @@ func boundedUTF8Bytes(value string, maximum int) string {
 		value = value[:len(value)-1]
 	}
 	return value
-}
-
-func loadExecutionSnapshot(
-	ctx context.Context,
-	tx *sql.Tx,
-	task protocol.TaskSnapshot,
-	requestedProfileID string,
-) (protocol.ExecutionSnapshot, bool, string, error) {
-	profileID := requestedProfileID
-	if profileID == "" {
-		profileID = task.ExecutionProfileID
-	}
-	if profileID == "" || profileID == protocol.PersistentAutoProfileID {
-		return protocol.ExecutionSnapshot{
-			ProfileID: protocol.PersistentAutoProfileID, ProfileVersion: 1,
-			Backend: protocol.BackendPersistent, Runtime: task.Runtime,
-			Provider: "worker", Model: "worker-default", TimeoutSeconds: task.TimeoutSeconds,
-			ResourceClass: "worker", CommitResolutionPolicy: protocol.CommitResolvePerAttempt,
-		}, true, "", nil
-	}
-	var snapshot protocol.ExecutionSnapshot
-	var enabled, healthy int
-	var reason string
-	err := tx.QueryRowContext(ctx, `
-		SELECT p.id, p.current_version, v.kind, v.runtime, v.provider, v.model,
-		       v.timeout_seconds, v.resource_class, v.commit_resolution_policy,
-		       p.enabled, p.healthy, p.health_reason
-		FROM execution_profiles p
-		JOIN execution_profile_versions v ON v.profile_id = p.id AND v.version = p.current_version
-		WHERE p.id = ?
-	`, profileID).Scan(&snapshot.ProfileID, &snapshot.ProfileVersion, &snapshot.Backend,
-		&snapshot.Runtime, &snapshot.Provider, &snapshot.Model, &snapshot.TimeoutSeconds,
-		&snapshot.ResourceClass, &snapshot.CommitResolutionPolicy, &enabled, &healthy, &reason)
-	if errors.Is(err, sql.ErrNoRows) {
-		return snapshot, false, "", invalid("execution_profile_not_found", "the selected execution profile does not exist")
-	}
-	if err != nil {
-		return snapshot, false, "", unavailable(err)
-	}
-	if snapshot.Runtime != task.Runtime {
-		return snapshot, false, fmt.Sprintf("Execution profile %s does not support runtime %s.", profileID, task.Runtime), nil
-	}
-	if enabled == 0 {
-		return snapshot, false, fmt.Sprintf("Execution profile %s is disabled.", profileID), nil
-	}
-	if healthy == 0 {
-		if reason == "" {
-			reason = "health validation has not passed"
-		}
-		return snapshot, false, fmt.Sprintf("Execution profile %s is unhealthy: %s", profileID, reason), nil
-	}
-	return snapshot, true, "", nil
 }
 
 func validateFrozenRepositories(ctx context.Context, tx *sql.Tx, repositories []protocol.TaskRepository) error {
@@ -1937,46 +1833,11 @@ func (s *Store) RetrySession(ctx context.Context, expectedRunID, sessionID strin
 		return protocol.RunDetail{}, conflict("task_concurrency_full", "retry this Session after another active Session finishes")
 	}
 	assignedWorkerID := ""
-	if backend == protocol.BackendPersistent {
-		selection, err := s.selectSessionRoute(ctx, tx, repositoryID, identity, now, "", runtime)
-		if err != nil {
-			return protocol.RunDetail{}, err
-		}
-		assignedWorkerID = selection.workerID
-	} else {
-		var repositoryAvailable int
-		if err := tx.QueryRowContext(ctx, `
-			SELECT EXISTS(
-				SELECT 1 FROM repositories repository
-				WHERE repository.id = ? AND repository.remote_identity = ?
-				  AND (repository.centrally_managed = 0 OR repository.enabled = 1)
-			)
-		`, repositoryID, identity).Scan(&repositoryAvailable); err != nil {
-			return protocol.RunDetail{}, unavailable(err)
-		}
-		if repositoryAvailable == 0 {
-			return protocol.RunDetail{}, conflict(
-				"repository_not_available",
-				"the frozen repository is disabled, unavailable, or no longer matches its admitted identity",
-			)
-		}
-		var available int
-		if err := tx.QueryRowContext(ctx, `
-			SELECT EXISTS(
-				SELECT 1 FROM execution_profile_versions version
-				JOIN execution_profiles profile ON profile.id = version.profile_id
-				JOIN workers worker ON worker.id = ? AND worker.synthetic = 1
-				WHERE version.profile_id = ? AND version.version = ?
-				  AND profile.enabled = 1 AND profile.healthy = 1
-			)
-		`, syntheticWorkerID(profileID), profileID, profileVersion).Scan(&available); err != nil {
-			return protocol.RunDetail{}, unavailable(err)
-		}
-		if available == 0 {
-			return protocol.RunDetail{}, conflict("execution_profile_version_unavailable", "the frozen execution profile version is unavailable")
-		}
-		assignedWorkerID = syntheticWorkerID(profileID)
+	selection, err := s.selectSessionRoute(ctx, tx, repositoryID, identity, now, "", runtime)
+	if err != nil {
+		return protocol.RunDetail{}, err
 	}
+	assignedWorkerID = selection.workerID
 	var executionID string
 	err = tx.QueryRowContext(ctx, `SELECT id FROM executions WHERE session_id = ?`, sessionID).Scan(&executionID)
 	if errors.Is(err, sql.ErrNoRows) {

@@ -253,27 +253,27 @@ describe("Runs", () => {
     expect(events).toHaveBeenLastCalledWith("attempt-1", 0);
   });
 
-  it("shows the frozen execution destination in Run detail", async () => {
-    const cloud = runDetail();
-    cloud.run = {
-      ...cloud.run,
+  it("shows the persistent Worker destination in Run detail", async () => {
+    const persistent = runDetail();
+    persistent.run = {
+      ...persistent.run,
       execution: {
-        profile_id: "profile-cloud-1",
+        profile_id: "persistent-auto",
         profile_version: 1,
-        backend: "fake_cloud_run",
+        backend: "persistent",
         runtime: "codex",
-        provider: "openrouter",
-        model: "deepseek/test",
+        provider: "worker",
+        model: "worker-default",
         timeout_seconds: 7200,
-        resource_class: "standard",
-        commit_resolution_policy: "frozen_commit",
+        resource_class: "worker",
+        commit_resolution_policy: "resolve_per_attempt",
       },
     };
-    vi.spyOn(api, "run").mockResolvedValue(cloud);
+    vi.spyOn(api, "run").mockResolvedValue(persistent);
     const client = testClient();
     render(<QueryClientProvider client={client}><RunDetailView id={headRun.id} onBack={() => undefined} /></QueryClientProvider>);
 
-    expect(await screen.findByText(/Cloud Run · openrouter \/ deepseek\/test/)).toBeVisible();
+    expect(await screen.findByText(/Automatic persistent Worker/)).toBeVisible();
   });
 });
 

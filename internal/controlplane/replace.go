@@ -282,25 +282,7 @@ func (s *Store) replacementRoute(
 	execution protocol.ExecutionSnapshot,
 	now int64,
 ) (string, string, error) {
-	if execution.Backend == protocol.BackendPersistent {
-		return s.resumeRoute(ctx, tx, repositoryID, identity, runtime, now)
-	}
-	var available int
-	if err := tx.QueryRowContext(ctx, `
-		SELECT EXISTS(
-			SELECT 1 FROM execution_profile_versions version
-			JOIN execution_profiles profile ON profile.id = version.profile_id
-			JOIN workers worker ON worker.id = ? AND worker.synthetic = 1
-			WHERE version.profile_id = ? AND version.version = ?
-			  AND profile.enabled = 1 AND profile.healthy = 1
-		)
-	`, syntheticWorkerID(execution.ProfileID), execution.ProfileID, execution.ProfileVersion).Scan(&available); err != nil {
-		return "", "", unavailable(err)
-	}
-	if available == 0 {
-		return "", "", conflict("execution_profile_version_unavailable", "the frozen execution profile version is unavailable")
-	}
-	return syntheticWorkerID(execution.ProfileID), "", nil
+	return s.resumeRoute(ctx, tx, repositoryID, identity, runtime, now)
 }
 
 func replacePublishBranch(prompt, oldBranch, newBranch string) string {

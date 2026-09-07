@@ -177,21 +177,15 @@ func (s *Store) AdmitProcedureRun(
 		if !profileReady {
 			blockedReason = profileBlockedReason
 		} else if materialized < snapshot.ConcurrencyLimit {
-			if execution.Backend == protocol.BackendPersistent {
-				selection, err = s.selectSessionRoute(
-					ctx, tx, target.repository.ID, target.repository.RemoteIdentity, now, "", snapshot.Runtime,
-				)
-				blockedReason = "Waiting for a healthy compatible Worker with repository access."
-				if err == nil {
-					state, blockedReason, assigned = "queued", "", selection.workerID
-					materialized++
-				} else if !serviceErrorCode(err, "no_eligible_worker") {
-					return protocol.ProcedureRunAdmission{}, err
-				}
-			} else {
-				state, blockedReason, assigned = "queued", "", syntheticWorkerID(execution.ProfileID)
-				selection.workerID = assigned.(string)
+			selection, err = s.selectSessionRoute(
+				ctx, tx, target.repository.ID, target.repository.RemoteIdentity, now, "", snapshot.Runtime,
+			)
+			blockedReason = "Waiting for a healthy compatible Worker with repository access."
+			if err == nil {
+				state, blockedReason, assigned = "queued", "", selection.workerID
 				materialized++
+			} else if !serviceErrorCode(err, "no_eligible_worker") {
+				return protocol.ProcedureRunAdmission{}, err
 			}
 		}
 		if _, err := tx.ExecContext(ctx, `

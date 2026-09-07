@@ -231,9 +231,7 @@ export function RunDetailView({ id, onBack }: { id: string; onBack: () => void }
   if (query.isPending) return <LoadingState label="Loading Run" />;
   if (query.isError || !query.data) return <ErrorState error={query.error} onRetry={() => void query.refetch()} />;
   const { run, sessions } = query.data;
-  const execution = run.execution.backend === "persistent"
-    ? "Automatic persistent Worker"
-    : `Cloud Run · ${run.execution.provider} / ${run.execution.model}`;
+  const execution = "Automatic persistent Worker";
   return <div className="page run-detail-clean">
     <button className="back-link" onClick={onBack}><ArrowLeft size={14} /> Work</button>
     <div className="detail-heading run-detail-heading"><div><span className="eyebrow">{run.source.replace("_", " ")} · {run.id.slice(0, 8)}</span><h1>{workTitle(run)}</h1><p>{run.session_count} repository session{run.session_count === 1 ? "" : "s"} · {execution} · started {timeAgo(run.admitted_at)}</p></div><div className="detail-actions"><StatusBadge state={run.state} />{run.active_count > 0 && <button className="button button-danger-secondary" disabled={cancel.isPending} onClick={() => cancel.mutate()}><StopCircle size={14} /> Cancel</button>}</div></div>

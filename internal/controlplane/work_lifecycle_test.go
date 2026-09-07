@@ -64,59 +64,6 @@ func TestOutcomeContractConversionFreezesAdmittedRuns(t *testing.T) {
 	}
 }
 
-func TestAgentUpdateRejectsFakeCloudWithoutStateChange(t *testing.T) {
-	store := newTestStore(t)
-	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
-	})
-	profile := createFakeProfile(t, store, "Legacy synthetic", protocol.RuntimeCodex, "succeeded")
-	task := createProfileTask(t, store, worker.Repositories[0].ID, profile.ID)
-
-	if _, err := store.SetTaskOutcomeContract(context.Background(), task.ID, protocol.SetTaskOutcomeContractRequest{
-		OutcomeContract: protocol.OutcomeAgentUpdate, ExpectedGeneration: task.Generation,
-	}); !serviceErrorCode(err, "agent_update_backend_unsupported") {
-		t.Fatalf("conversion error = %v", err)
-	}
-	unchanged, err := store.Task(context.Background(), task.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if unchanged.Generation != task.Generation || unchanged.OutcomeContract != protocol.OutcomeProcessExit {
-		t.Fatalf("rejected conversion changed Task = %#v", unchanged)
-	}
-	run, _, err := store.RunTask(context.Background(), task.ID, protocol.RunTaskRequest{RequestKey: "legacy-cloud-next"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := store.DispatchFakeCloud(context.Background(), 10); err != nil {
-		t.Fatal(err)
-	}
-	run, err = store.Run(context.Background(), run.Run.ID)
-	if err != nil || run.Run.State != protocol.RunSucceeded || run.Run.OutcomeContract != protocol.OutcomeProcessExit {
-		t.Fatalf("legacy synthetic completion = %#v, err %v", run, err)
-	}
-
-	persistent, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
-		Name: "Agent persistent", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
-		RepositoryIDs: []string{worker.Repositories[0].ID}, OutcomeContract: protocol.OutcomeAgentUpdate,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, _, err := store.RunTask(context.Background(), persistent.ID, protocol.RunTaskRequest{
-		RequestKey: "agent-cloud-override", ExecutionProfileID: profile.ID,
-	}); !serviceErrorCode(err, "agent_update_backend_unsupported") {
-		t.Fatalf("agent-update admission override error = %v", err)
-	}
-	var runCount int
-	if err := store.db.QueryRow(`SELECT COUNT(*) FROM runs WHERE request_key = 'agent-cloud-override'`).Scan(&runCount); err != nil {
-		t.Fatal(err)
-	}
-	if runCount != 0 {
-		t.Fatal("unsupported agent-update admission wrote a Run")
-	}
-}
-
 func TestWorkLifecycleStatesTargetsAndUpdateBounds(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
@@ -410,38 +357,6 @@ func TestProcessExitCompletionPreservesMaximumLegacyPayloads(t *testing.T) {
 				t.Fatalf("process-exit payload copied to terminal message: bytes=%d", len(work.TerminalMessage))
 			}
 		})
-	}
-}
-
-func TestFakeCloudCompletionPreservesMaximumLegacyResult(t *testing.T) {
-	store := newTestStore(t)
-	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
-	})
-	maximumResult := strings.Repeat("r", protocol.MaxResultBytes)
-	profile, err := store.CreateExecutionProfile(context.Background(), protocol.SaveExecutionProfileRequest{
-		Name: "Maximum result cloud", Kind: protocol.BackendFakeCloudRun, Runtime: protocol.RuntimeCodex,
-		Provider: "openrouter", Model: "test", Enabled: true, Healthy: true,
-		FakeOutcome: "succeeded", FakeResult: maximumResult,
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	task := createProfileTask(t, store, worker.Repositories[0].ID, profile.ID)
-	run, _, err := store.RunTask(context.Background(), task.ID, protocol.RunTaskRequest{RequestKey: "maximum-cloud"})
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := store.DispatchFakeCloud(context.Background(), 1); err != nil {
-		t.Fatal(err)
-	}
-	work, err := store.Work(context.Background(), run.Sessions[0].ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if work.Result != maximumResult || work.TerminalMessage != "" {
-		t.Fatalf("maximum fake-cloud result compatibility: result bytes=%d terminal bytes=%d",
-			len(work.Result), len(work.TerminalMessage))
 	}
 }
 

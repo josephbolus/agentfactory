@@ -263,56 +263,6 @@ func TestClaimSchedulingAlternatesEligibleRuns(t *testing.T) {
 	}
 }
 
-func TestFakeCloudSchedulingAlternatesEligibleRuns(t *testing.T) {
-	store := newTestStore(t)
-	ctx := context.Background()
-	now := time.Date(2026, 8, 23, 10, 0, 0, 0, time.UTC)
-	store.now = func() time.Time { return now }
-	api := createManagedRepositoryForProcedure(t, store, "github.com/acme/api")
-	web := createManagedRepositoryForProcedure(t, store, "github.com/acme/web")
-	profile := createFakeProfile(t, store, "Fleet cloud", protocol.RuntimeCodex, "succeeded")
-	createCloudProcedure := func(name string) protocol.Task {
-		procedure, err := store.CreateTask(ctx, protocol.SaveTaskRequest{
-			Name: name, Prompt: "Review this repository.", Runtime: protocol.RuntimeCodex,
-			ExecutionProfileID: profile.ID, OutcomeContract: protocol.OutcomeProcessExit,
-			ConcurrencyLimit: 10,
-		})
-		if err != nil {
-			t.Fatal(err)
-		}
-		return procedure
-	}
-	large := createCloudProcedure("Large cloud fleet")
-	small := createCloudProcedure("Small cloud fleet")
-	largeRun, err := store.AdmitProcedureRun(ctx, protocol.ProcedureRunRequest{
-		RequestKey: "large-cloud", Procedure: large.Name,
-		Repositories: []string{api.RemoteIdentity, web.RemoteIdentity},
-	})
-	if err != nil {
-		t.Fatal(err)
-	}
-	now = now.Add(time.Second)
-	smallRun := admitProcedureForTest(t, store, "small-cloud", small.Name, api.RemoteIdentity, false)
-	for iteration := 0; iteration < 2; iteration++ {
-		now = now.Add(time.Second)
-		if processed, err := store.DispatchFakeCloud(ctx, 1); err != nil || processed != 1 {
-			t.Fatalf("dispatch %d = %d, err %v", iteration, processed, err)
-		}
-	}
-	largeDetail, err := store.Run(ctx, largeRun.Run.Run.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	smallDetail, err := store.Run(ctx, smallRun.Run.Run.ID)
-	if err != nil {
-		t.Fatal(err)
-	}
-	largeAttempts := len(largeDetail.Sessions[0].Attempts) + len(largeDetail.Sessions[1].Attempts)
-	if largeAttempts != 1 || len(smallDetail.Sessions[0].Attempts) != 1 {
-		t.Fatalf("fair fake-cloud attempts = large %d, small %d", largeAttempts, len(smallDetail.Sessions[0].Attempts))
-	}
-}
-
 func TestProcedureRunHTTPReturnsTypedAdmissionAndProcedures(t *testing.T) {
 	store := newTestStore(t)
 	ctx := context.Background()
