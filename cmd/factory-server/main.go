@@ -185,16 +185,6 @@ func run() (returnErr error) {
 		cancelGitHubIntake()
 		<-githubIntakeDone
 	}()
-	fakeCloudContext, cancelFakeCloud := context.WithCancel(rootContext)
-	fakeCloudDone := make(chan struct{})
-	go func() {
-		defer close(fakeCloudDone)
-		store.RunFakeCloudDispatcher(fakeCloudContext, logger)
-	}()
-	defer func() {
-		cancelFakeCloud()
-		<-fakeCloudDone
-	}()
 
 	listener, err := net.ListenTCP("tcp", listenAddress)
 	if err != nil {
@@ -239,8 +229,6 @@ func run() (returnErr error) {
 	<-schedulesDone
 	cancelGitHubIntake()
 	<-githubIntakeDone
-	cancelFakeCloud()
-	<-fakeCloudDone
 	cancelSweep()
 	shutdown, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
