@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestPipelineAPIListsSummariesAndUpdatesDetails(t *testing.T) {
@@ -114,7 +114,7 @@ func TestCompleteStageHTTPReturnsMetadataWithinWorkerResponseLimit(t *testing.T)
 	ctx := context.Background()
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	pipeline, err := store.CreatePipeline(ctx, protocol.SavePipelineRequest{
 		Name:   "Escaped output",

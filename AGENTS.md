@@ -52,5 +52,5 @@ Rule 7: Use the body to explain what and why vs. how. Assume the code explains t
 - Before removing a worktree, inspect every worktree and publish or preserve
   meaningful changes. Delete untracked state only with explicit approval.
 
-- `origin` is `github.com/jbolus-owens/factory`. `upstream` preserves the
+- `origin` is `github.com/josephbolus/agentfactory`. `upstream` preserves the
   technical remote identity.

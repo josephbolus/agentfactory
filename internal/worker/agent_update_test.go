@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestWorkerLocalAgentUpdateScopesTokenAndForwardsWithoutWorkerCredentials(t *testing.T) {
@@ -166,7 +166,7 @@ func TestReadyReplaySkipsMutableDeliveryValidation(t *testing.T) {
 	input := protocol.AgentUpdateRequest{
 		WorkID: testWorkID, AttemptID: testAttemptID, UpdateToken: "token",
 		RequestID: "51000000-0000-4000-8000-000000000001", Status: protocol.WorkUpdateReady,
-		Message: "Ready.", PullRequestURL: "https://github.com/jbolus-owens/factory/pull/342",
+		Message: "Ready.", PullRequestURL: "https://github.com/josephbolus/agentfactory/pull/342",
 	}
 	body, err := json.Marshal(input)
 	if err != nil {
@@ -240,33 +240,33 @@ func TestReadyDeliveryRequiresMatchingRepositoryBranchAndFetchedHead(t *testing.
 		t.Fatal(err)
 	}
 	gh := filepath.Join(root, "gh")
-	writeFakeGitHubPR(t, gh, head, publishBranch, "jbolus-owens/factory")
+	writeFakeGitHubPR(t, gh, head, publishBranch, "josephbolus/agentfactory")
 	manager := &Manager{options: Options{GitExecutable: "git", GitHubExecutable: gh}}
 	claim := protocol.Claim{
 		Attempt: protocol.Attempt{ID: testAttemptID},
 		Session: protocol.ClaimedSession{
 			ID: testWorkID, Target: protocol.WorkTarget{PublishBranch: publishBranch},
 		},
-		Repository: protocol.Repository{RemoteIdentity: "github.com/jbolus-owens/factory"},
+		Repository: protocol.Repository{RemoteIdentity: "github.com/josephbolus/agentfactory"},
 	}
 	evidence, validationErr := manager.validateReadyDelivery(
 		context.Background(), claim, repository, worktree{Path: checkout},
-		"https://github.com/jbolus-owens/factory/pull/123",
+		"https://github.com/josephbolus/agentfactory/pull/123",
 	)
 	if validationErr != nil || evidence.HeadSHA != head || evidence.HeadBranch != publishBranch {
 		t.Fatalf("ready evidence = %#v, err %v", evidence, validationErr)
 	}
-	writeFakeGitHubPR(t, gh, strings.Repeat("a", 40), publishBranch, "jbolus-owens/factory")
+	writeFakeGitHubPR(t, gh, strings.Repeat("a", 40), publishBranch, "josephbolus/agentfactory")
 	if _, validationErr := manager.validateReadyDelivery(
 		context.Background(), claim, repository, worktree{Path: checkout},
-		"https://github.com/jbolus-owens/factory/pull/123",
+		"https://github.com/josephbolus/agentfactory/pull/123",
 	); validationErr == nil || validationErr.code != "delivery_head_mismatch" || validationErr.retriable {
 		t.Fatalf("mismatched delivery error = %#v", validationErr)
 	}
 	manager.options.GitHubExecutable = filepath.Join(root, "missing-gh")
 	if _, validationErr := manager.validateReadyDelivery(
 		context.Background(), claim, repository, worktree{Path: checkout},
-		"https://github.com/jbolus-owens/factory/pull/123",
+		"https://github.com/josephbolus/agentfactory/pull/123",
 	); validationErr == nil || validationErr.code != "github_validation_unavailable" || !validationErr.retriable {
 		t.Fatalf("provider outage error = %#v", validationErr)
 	}
@@ -286,7 +286,7 @@ func runTestCommand(t *testing.T, directory, name string, arguments ...string) s
 func writeFakeGitHubPR(t *testing.T, path, head, branch, repository string) {
 	t.Helper()
 	body, err := json.Marshal(gitHubPullRequest{
-		HTMLURL: "https://github.com/jbolus-owens/factory/pull/123",
+		HTMLURL: "https://github.com/josephbolus/agentfactory/pull/123",
 		Head: struct {
 			Ref  string `json:"ref"`
 			SHA  string `json:"sha"`

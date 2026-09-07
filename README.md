@@ -41,17 +41,17 @@ Define work  ->  Dispatch repositories  ->  Run agents  ->  Inspect outcomes
 Requirements:
 
 - Go 1.25.13 or newer on the 1.25 release line, or Go 1.26.6 or newer
-- Git, `curl`, and `just`
+- Git, `curl`, and `make`
 - An authenticated Pi, Codex, or Claude Code CLI on the Worker host
 - GitHub CLI when using managed GitHub repositories
 
 ```sh
 # Obtain Agent Factory from approved internal source control.
 cd factory
-just build
+make build
 mkdir -p ~/.factory
 cp examples/worker.toml ~/.factory/worker.toml
-just run
+make run
 ```
 
 Open [http://127.0.0.1:7337](http://127.0.0.1:7337). Edit
@@ -201,15 +201,15 @@ view of the work. See the
 ## Development
 
 ```sh
-just test
-just vet
-just ui-check
+make test
+make vet
+make ui-check
 ```
 
 Browser-facing changes are proven against a real Go server with:
 
 ```sh
-just test-browser
+make test-browser
 ```
 
 Run the documented checks before opening an internal pull request. Internal pull

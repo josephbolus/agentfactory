@@ -6,14 +6,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestPipelineAnswerResumesOnlyFinalAgentUpdateStage(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	pipeline, err := store.CreatePipeline(ctx, protocol.SavePipelineRequest{
 		Name: "Build then report",
@@ -97,7 +97,7 @@ func TestPipelineTemplateSnapshotsAndSequencesAgentStages(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	pipeline, err := store.CreatePipeline(ctx, protocol.SavePipelineRequest{
 		Name: "Build and review",
@@ -216,7 +216,7 @@ func TestRunAdmissionRejectsRenderedPipelineThatCannotFitAClaim(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	stages := make([]protocol.PipelineStage, 9)
 	for index := range stages {
@@ -282,7 +282,7 @@ func TestPipelineStagesRequireRunningAttemptAndStopAfterCancellation(t *testing.
 	ctx := context.Background()
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	pipeline, err := store.CreatePipeline(ctx, protocol.SavePipelineRequest{
 		Name: "Two stages",
@@ -347,7 +347,7 @@ func TestPipelineStagesRequireRunningAttemptAndStopAfterCancellation(t *testing.
 func TestPipelineDeleteRejectsTemplatesUsedByTasks(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	pipeline, err := store.CreatePipeline(context.Background(), protocol.SavePipelineRequest{
 		Name: "Used", Stages: []protocol.PipelineStage{{Name: "Build", Prompt: "{{ task.prompt }}"}},
@@ -370,7 +370,7 @@ func TestSingleStageCompatibilityCannotOverwriteAStageFailure(t *testing.T) {
 	ctx := context.Background()
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(ctx, protocol.SaveTaskRequest{
 		Name: "Fail safely", Prompt: "Fail this stage.", Runtime: protocol.RuntimeCodex,

@@ -10,7 +10,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 const testCheckpointSHA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -35,7 +35,7 @@ func TestExpiredAgentAttemptRetainsAcceptedRecoveryEvidence(t *testing.T) {
 			requestID: "64000000-0000-4000-8000-000000000002",
 			update: protocol.AttemptUpdateRequest{
 				Status: protocol.WorkUpdateReady, Message: "Ready.",
-				PullRequestURL:     "https://github.com/jbolus-owens/factory/pull/343",
+				PullRequestURL:     "https://github.com/josephbolus/agentfactory/pull/343",
 				PullRequestHeadSHA: testCheckpointSHA,
 			},
 		},
@@ -403,7 +403,7 @@ func TestContinuationPreservesEveryTrustedAnswerAcrossQuestionRounds(t *testing.
 func TestFailedReadyPostflightRetainsTrustedPRRecoveryEvidence(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "PR recovery", Prompt: "Open a pull request.", Runtime: protocol.RuntimeCodex,
@@ -425,7 +425,7 @@ func TestFailedReadyPostflightRetainsTrustedPRRecoveryEvidence(t *testing.T) {
 	if _, err := store.StartAttempt(context.Background(), claim.Attempt.ID, protocol.StartAttemptRequest{LeaseToken: tokenA}); err != nil {
 		t.Fatal(err)
 	}
-	const pullRequestURL = "https://github.com/jbolus-owens/factory/pull/343"
+	const pullRequestURL = "https://github.com/josephbolus/agentfactory/pull/343"
 	if _, err := store.AppendAgentUpdate(context.Background(), claim.Attempt.ID, protocol.AttemptUpdateRequest{
 		LeaseToken: tokenA, RequestID: "63000000-0000-4000-8000-000000000001",
 		Status: protocol.WorkUpdateReady, Message: "Ready.", PullRequestURL: pullRequestURL,
@@ -493,7 +493,7 @@ func TestFailedReadyPostflightRetainsTrustedPRRecoveryEvidence(t *testing.T) {
 func TestCancelledReadyAttemptRetainsTrustedPRRecoveryEvidence(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Cancelled PR recovery", Prompt: "Open a pull request.", Runtime: protocol.RuntimeCodex,
@@ -519,7 +519,7 @@ func TestCancelledReadyAttemptRetainsTrustedPRRecoveryEvidence(t *testing.T) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	const pullRequestURL = "https://github.com/jbolus-owens/factory/pull/343"
+	const pullRequestURL = "https://github.com/josephbolus/agentfactory/pull/343"
 	if _, err := store.AppendAgentUpdate(context.Background(), claim.Attempt.ID, protocol.AttemptUpdateRequest{
 		LeaseToken: tokenA, RequestID: "63100000-0000-4000-8000-000000000001",
 		Status: protocol.WorkUpdateReady, Message: "Ready.", PullRequestURL: pullRequestURL,
@@ -558,7 +558,7 @@ func TestCancelledReadyAttemptRetainsTrustedPRRecoveryEvidence(t *testing.T) {
 func TestFailedNeedsInputPostflightRetainsAuthoritativeCheckpoint(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Checkpoint recovery", Prompt: "Ask when blocked.", Runtime: protocol.RuntimeCodex,
@@ -663,11 +663,11 @@ func TestPendingResumeSurvivesAnswerCancellationPreparationFailureAndRetry(t *te
 
 func TestContinuationPromptBoundsHistoryAndKeepsMandatoryRecoveryContext(t *testing.T) {
 	state := continuationState{
-		title: "Resume", repository: "github.com/jbolus-owens/factory",
+		title: "Resume", repository: "github.com/josephbolus/agentfactory",
 		resolvedPrompt: strings.Repeat("p", 52<<10), publishBranch: "factory/work-resume",
 		question: "Which API?", answer: "Keep v1.", checkpointSHA: testCheckpointSHA,
 		pendingResumeSHA:      testCheckpointSHA,
-		pullRequestURL:        "https://github.com/jbolus-owens/factory/pull/343",
+		pullRequestURL:        "https://github.com/josephbolus/agentfactory/pull/343",
 		pullRequestHeadBranch: "factory/work-resume", pullRequestHeadSHA: testCheckpointSHA,
 		retryMayRepeatEffects: true,
 	}
@@ -754,7 +754,7 @@ func TestContinuationPromptTruncatesNewestOutcomeBeforeProgress(t *testing.T) {
 		},
 	}
 	state := continuationState{
-		title: "Resume", repository: "github.com/jbolus-owens/factory",
+		title: "Resume", repository: "github.com/josephbolus/agentfactory",
 		publishBranch: "factory/work-resume", checkpointSHA: testCheckpointSHA,
 	}
 	var prompt string
@@ -800,7 +800,7 @@ func TestContinuationOmissionDigestCoversTrustedAnswer(t *testing.T) {
 	sum := sha256.Sum256(serialized)
 	digest := hex.EncodeToString(sum[:])
 	state := continuationState{
-		title: "Resume", repository: "github.com/jbolus-owens/factory",
+		title: "Resume", repository: "github.com/josephbolus/agentfactory",
 		publishBranch: "factory/work-resume", checkpointSHA: testCheckpointSHA,
 	}
 	var prompt string
@@ -823,7 +823,7 @@ func TestContinuationOmissionDigestCoversTrustedAnswer(t *testing.T) {
 
 func TestAgentContinuationReserveIncludesFirstQuestionAndAnswer(t *testing.T) {
 	const title = "Resume"
-	const repository = "github.com/jbolus-owens/factory"
+	const repository = "github.com/josephbolus/agentfactory"
 	const publishBranch = "factory/work-resume"
 	best, low, high := -1, 0, protocol.MaxResolvedPromptBytes
 	for low <= high {
@@ -879,7 +879,7 @@ func TestAgentContinuationReserveIncludesFirstQuestionAndAnswer(t *testing.T) {
 func TestExactReplacementCopiesFrozenExecutionAndReplayWinsBeforeEligibility(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	pipeline, err := store.CreatePipeline(context.Background(), protocol.SavePipelineRequest{
 		Name: "Exact replacement stages",
@@ -972,7 +972,7 @@ func needsInputWork(t *testing.T) (*Store, protocol.Worker, protocol.RunDetail, 
 	t.Helper()
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Needs input", Prompt: "Implement the requested behavior.", Runtime: protocol.RuntimeCodex,

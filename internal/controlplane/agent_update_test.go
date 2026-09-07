@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func claimRunningAgentWork(t *testing.T, store *Store, requestKey string) (protocol.RunDetail, protocol.Claim) {
 	t.Helper()
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Agent updates", Prompt: "Report an outcome.", Runtime: protocol.RuntimeCodex,
@@ -119,7 +119,7 @@ func TestReadyAgentUpdateReplayNeedsNoFreshDeliveryEvidence(t *testing.T) {
 	request := protocol.AttemptUpdateRequest{
 		LeaseToken: tokenA, RequestID: "21000000-0000-4000-8000-000000000001",
 		Status: protocol.WorkUpdateReady, Message: "Pull request is ready.",
-		PullRequestURL:        "https://github.com/jbolus-owens/factory/pull/342",
+		PullRequestURL:        "https://github.com/josephbolus/agentfactory/pull/342",
 		PullRequestHeadBranch: "factory/work-ready",
 		PullRequestHeadSHA:    strings.Repeat("a", 40),
 	}
@@ -172,7 +172,7 @@ func TestAgentUpdateReservesOutcomeAfter199ProgressReports(t *testing.T) {
 func TestAgentUpdateRejectsProcessExitAndOutcomeConflicts(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Legacy", Prompt: "Exit normally.", Runtime: protocol.RuntimeCodex,

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func (manager *Manager) reserveAndClaim(ctx context.Context) {

@@ -7,13 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestTaskAdmissionWorkerLifecycleAndAggregateRun(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Review factory", Prompt: "Review the repository for real bugs.", Runtime: protocol.RuntimeCodex,
@@ -102,7 +102,7 @@ func TestTaskRunSnapshotsRepositoryWorkflow(t *testing.T) {
 func TestRunPagePreservesRepositorySummaryWithoutPrompt(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Board summary", Prompt: "Do not expose this prompt.", Runtime: protocol.RuntimeCodex,
@@ -130,7 +130,7 @@ func TestRunPagePreservesRepositorySummaryWithoutPrompt(t *testing.T) {
 	if summary.Prompt != "" || summary.TimeoutSeconds != 0 || summary.ConcurrencyLimit != 0 {
 		t.Fatalf("Run page leaked Task execution detail: %#v", summary)
 	}
-	if len(summary.Repositories) != 1 || summary.Repositories[0].RemoteIdentity != "github.com/jbolus-owens/factory" {
+	if len(summary.Repositories) != 1 || summary.Repositories[0].RemoteIdentity != "github.com/josephbolus/agentfactory" {
 		t.Fatalf("Run page repository summary = %#v", summary.Repositories)
 	}
 	if page.Runs[0].OutcomeContract != protocol.OutcomeProcessExit || len(page.Runs[0].Targets) != 1 ||
@@ -142,7 +142,7 @@ func TestRunPagePreservesRepositorySummaryWithoutPrompt(t *testing.T) {
 func TestTaskRunReplayReturnsCommittedRunAfterTaskChanges(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Replay after edit", Prompt: "Review the repository.", Runtime: protocol.RuntimeCodex,
@@ -173,7 +173,7 @@ func TestTaskRunReplayReturnsCommittedRunAfterTaskChanges(t *testing.T) {
 func TestTaskRunReplayRejectsDifferentImmutableIdentity(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	createTask := func(name string) protocol.Task {
 		task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
@@ -212,7 +212,7 @@ func TestTaskRunReplayRejectsDifferentImmutableIdentity(t *testing.T) {
 func TestRunDetailClosesSessionRowsBeforeLoadingAttempts(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Connection-safe detail", Prompt: "Review the repository.", Runtime: protocol.RuntimeCodex,
@@ -330,8 +330,8 @@ func TestManualTaskRunRejectsSchedulerRequestKeys(t *testing.T) {
 func TestCancelSessionCancelsOnlyTheSelectedSession(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10,
-		protocol.RepositoryRegistration{Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory"},
-		protocol.RepositoryRegistration{Key: "neo", RemoteIdentity: "github.com/jbolus-owens/neo"},
+		protocol.RepositoryRegistration{Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory"},
+		protocol.RepositoryRegistration{Key: "neo", RemoteIdentity: "github.com/josephbolus/neo"},
 	)
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Two repository review", Prompt: "Review both repositories.", Runtime: protocol.RuntimeCodex,
@@ -400,8 +400,8 @@ func TestRunAggregateUsesCanonicalPrecedence(t *testing.T) {
 func TestOverviewDoesNotFlagTaskConcurrencyThrottling(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10,
-		protocol.RepositoryRegistration{Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory"},
-		protocol.RepositoryRegistration{Key: "neo", RemoteIdentity: "github.com/jbolus-owens/neo"},
+		protocol.RepositoryRegistration{Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory"},
+		protocol.RepositoryRegistration{Key: "neo", RemoteIdentity: "github.com/josephbolus/neo"},
 	)
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Throttled review", Prompt: "Review both repositories.", Runtime: protocol.RuntimeCodex,
@@ -426,7 +426,7 @@ func TestTaskScheduleUsesFrozenOccurrencePromptAndSkipsMissedInstants(t *testing
 	now := time.Date(2026, time.August, 10, 8, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Morning review", Prompt: "Review the repository.", Runtime: protocol.RuntimeCodex,
@@ -466,7 +466,7 @@ func TestTaskScheduleUsesFrozenOccurrencePromptAndSkipsMissedInstants(t *testing
 func TestTaskScheduleReservesPromptCapacityForOccurrenceMetadata(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Manual oversized schedule", Prompt: strings.Repeat("x", protocol.MaxTaskPromptBytes),
@@ -558,7 +558,7 @@ func TestOverviewHandlesFreshInstallAndRedactsUpcomingTasks(t *testing.T) {
 		t.Fatalf("fresh Overview run metrics = %#v", overview.RunMetrics)
 	}
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	_, err = store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Private scheduled review", Prompt: "Do not expose this prompt on Overview.",
@@ -586,7 +586,7 @@ func TestOverviewReportsRunPerformanceForRunAdmittedInLastDay(t *testing.T) {
 	now := base
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Measured review", Prompt: "Review the repository.", Runtime: protocol.RuntimeCodex,
@@ -663,7 +663,7 @@ func TestOverviewDoesNotFlagFailuresOlderThanOneDay(t *testing.T) {
 	now := time.Date(2026, time.August, 10, 8, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Failing review", Prompt: "Fail this review.", Runtime: protocol.RuntimeCodex,
@@ -700,7 +700,7 @@ func TestEditingAndReenablingTaskPreservesBlockedPendingOccurrence(t *testing.T)
 	now := time.Date(2026, time.August, 10, 8, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Blocked review", Prompt: "Review the repository.", Runtime: protocol.RuntimeCodex,
@@ -777,7 +777,7 @@ func TestIncompatibleWorkerCannotReceiveOrClaimTaskRun(t *testing.T) {
 		t.Fatalf("legacy registration error = %v", err)
 	}
 	worker := registerTestWorker(t, store, workerA, 1, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	if _, err := store.db.ExecContext(context.Background(), `
 		UPDATE workers SET claim_protocol_version = 0 WHERE id = ?
@@ -810,7 +810,7 @@ func TestIncompatibleWorkerCannotReceiveOrClaimTaskRun(t *testing.T) {
 func TestClaimReplayRequiresCurrentProtocolVersion(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 1, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Replay protocol fence", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -840,7 +840,7 @@ func TestClaimReplayRequiresCurrentProtocolVersion(t *testing.T) {
 func TestClaimScansPastFiftyIncompatibleBlockedSessions(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 100, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	sessionIDs := createQueuedTaskSessions(t, store, worker, 51)
 	if _, err := store.db.ExecContext(context.Background(), `DELETE FROM executions`); err != nil {
@@ -869,7 +869,7 @@ func TestClaimScansPastFiftyIncompatibleBlockedSessions(t *testing.T) {
 
 func TestClaimScansPastFiftyHealthyQueuedAssignmentsToReroute(t *testing.T) {
 	store := newTestStore(t)
-	repository := protocol.RepositoryRegistration{Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory"}
+	repository := protocol.RepositoryRegistration{Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory"}
 	claimingWorker := registerTestWorker(t, store, workerA, 100, repository)
 	healthyWorker := registerTestWorker(t, store, "worker-b", 100, repository)
 	offlineWorker := registerTestWorker(t, store, "worker-c", 100, repository)
@@ -982,7 +982,7 @@ func TestFrozenOccurrenceRechecksPausedTaskBeforeAdmission(t *testing.T) {
 			now := time.Date(2026, time.August, 10, 8, 0, 0, 0, time.UTC)
 			store.now = func() time.Time { return now }
 			worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-				Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+				Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 			})
 			task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 				Name: "Race guard " + test.name, Prompt: "Review the repository.", Runtime: protocol.RuntimeCodex,
@@ -1025,7 +1025,7 @@ func TestDisablingTaskPausesFrozenOccurrenceUntilDiscard(t *testing.T) {
 	now := time.Date(2026, time.August, 10, 8, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Paused review", Prompt: "Review the repository.", Runtime: protocol.RuntimeCodex,

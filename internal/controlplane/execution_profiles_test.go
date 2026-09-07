@@ -13,13 +13,13 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestExecutionProfileAndManualOverrideAPI(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task := createProfileTask(t, store, worker.Repositories[0].ID, "")
 	handler := NewHandler(store, slog.New(slog.NewTextHandler(io.Discard, nil)))
@@ -94,7 +94,7 @@ func createProfileTask(t *testing.T, store *Store, repositoryID, profileID strin
 func TestExecutionProfileManualOverrideUsesExistingLifecycle(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Cloud burst", protocol.RuntimeCodex, "succeeded")
 	task := createProfileTask(t, store, worker.Repositories[0].ID, "")
@@ -137,7 +137,7 @@ func TestExecutionProfileManualOverrideUsesExistingLifecycle(t *testing.T) {
 func TestExecutionProfileRunReplayIncludesManualOverride(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Replay cloud", protocol.RuntimeCodex, "succeeded")
 	task := createProfileTask(t, store, worker.Repositories[0].ID, "")
@@ -160,7 +160,7 @@ func TestExecutionProfileRunReplayIncludesManualOverride(t *testing.T) {
 func TestPersistentAutoManualOverrideBeatsCloudTaskDefault(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Cloud default", protocol.RuntimeCodex, "succeeded")
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
@@ -186,7 +186,7 @@ func TestPersistentAutoManualOverrideBeatsCloudTaskDefault(t *testing.T) {
 func TestFakeCloudRetryReusesFrozenProfileVersion(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Immutable cloud", protocol.RuntimeCodex, "failed")
 	task := createProfileTask(t, store, worker.Repositories[0].ID, profile.ID)
@@ -255,7 +255,7 @@ func TestFakeCloudRetryReusesFrozenProfileVersion(t *testing.T) {
 func TestFakeCloudDoesNotStartQueuedRunWhileProfileIsUnready(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Dispatch health", protocol.RuntimeCodex, "succeeded")
 	task := createProfileTask(t, store, worker.Repositories[0].ID, profile.ID)
@@ -300,7 +300,7 @@ func TestFakeCloudDoesNotStartQueuedRunWhileProfileIsUnready(t *testing.T) {
 func TestFakeCloudDoesNotReleaseOrRetryDisabledRepository(t *testing.T) {
 	store := newTestStore(t)
 	repository, _, err := store.CreateManagedRepository(context.Background(), protocol.CreateManagedRepositoryRequest{
-		RemoteIdentity: "github.com/jbolus-owens/factory",
+		RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -349,7 +349,7 @@ func TestFakeCloudDoesNotReleaseOrRetryDisabledRepository(t *testing.T) {
 func TestFakeCloudCancellationIsFactoryOwned(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Cancellable cloud", protocol.RuntimeCodex, "running")
 	task := createProfileTask(t, store, worker.Repositories[0].ID, profile.ID)
@@ -382,7 +382,7 @@ func TestFakeCloudRunningAttemptHonorsFrozenTimeout(t *testing.T) {
 	now := time.Date(2026, time.August, 15, 12, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile, err := store.CreateExecutionProfile(context.Background(), protocol.SaveExecutionProfileRequest{
 		Name: "Timed cloud", Kind: protocol.BackendFakeCloudRun, Runtime: protocol.RuntimeCodex,
@@ -423,7 +423,7 @@ func TestFakeCloudRunningAttemptSurvivesStartupLeaseSweep(t *testing.T) {
 	now := time.Date(2026, time.August, 15, 12, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Restarted cloud", protocol.RuntimeCodex, "running")
 	task := createProfileTask(t, store, worker.Repositories[0].ID, profile.ID)
@@ -462,7 +462,7 @@ func TestStartupLeaseSweepStillExpiresPersistentAttempts(t *testing.T) {
 	now := time.Date(2026, time.August, 15, 12, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task := createProfileTask(t, store, worker.Repositories[0].ID, "")
 	run, _, err := store.RunTask(context.Background(), task.ID, protocol.RunTaskRequest{RequestKey: "expire-persistent"})
@@ -505,7 +505,7 @@ func TestStartupLeaseSweepStillExpiresPersistentAttempts(t *testing.T) {
 func TestUnhealthyAndIncompatibleProfilesBlockWithoutAttempt(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	healthReason := strings.Repeat("🧪", protocol.MaxWaitingReasonBytes/2+1)
 	unhealthy, err := store.CreateExecutionProfile(context.Background(), protocol.SaveExecutionProfileRequest{
@@ -555,7 +555,7 @@ func TestFakeCloudProfileBlockedRunRecoversWhenProfileIsReady(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			store := newTestStore(t)
 			worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-				Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+				Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 			})
 			profile, err := store.CreateExecutionProfile(context.Background(), protocol.SaveExecutionProfileRequest{
 				Name: "Recovering cloud", Kind: protocol.BackendFakeCloudRun, Runtime: protocol.RuntimeCodex,
@@ -603,7 +603,7 @@ func TestScheduledRunUsesSavedExecutionProfile(t *testing.T) {
 	now := time.Date(2026, time.August, 15, 8, 0, 0, 0, time.UTC)
 	store.now = func() time.Time { return now }
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Scheduled cloud", protocol.RuntimeCodex, "succeeded")
 	_, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{

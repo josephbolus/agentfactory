@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestAgentNeedsInputForwardsWorkerVerifiedCheckpoint(t *testing.T) {
@@ -196,7 +196,7 @@ func TestRecoveryPreparationPrefersPendingSHAAndRequiresExactRestoredRef(t *test
 		t.Fatalf("missing historical checkpoint ref error = %v", err)
 	}
 
-	knownPR := "https://github.com/jbolus-owens/factory/pull/343"
+	knownPR := "https://github.com/josephbolus/agentfactory/pull/343"
 	if _, _, err := resolveRecoveryCommit(context.Background(), "git", repository, worktreeRecovery{
 		WorkID: testWorkID, PublishBranch: publishBranch,
 		PullRequestURL: knownPR, PullRequestHeadSHA: checkpoint,
@@ -246,7 +246,7 @@ func TestRecoveryCommitRejectsChangedRegisteredOrigin(t *testing.T) {
 		},
 		"known pull request": {
 			WorkID: testWorkID, PublishBranch: "factory/work-1111111111111111",
-			PullRequestURL: "https://github.com/jbolus-owens/factory/pull/343", PullRequestHeadSHA: base,
+			PullRequestURL: "https://github.com/josephbolus/agentfactory/pull/343", PullRequestHeadSHA: base,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

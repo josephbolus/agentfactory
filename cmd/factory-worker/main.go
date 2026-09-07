@@ -9,8 +9,8 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/jbolus-owens/factory/internal/buildinfo"
-	"github.com/jbolus-owens/factory/internal/worker"
+	"github.com/josephbolus/agentfactory/internal/buildinfo"
+	"github.com/josephbolus/agentfactory/internal/worker"
 )
 
 func main() {

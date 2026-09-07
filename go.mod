@@ -1,4 +1,4 @@
-module github.com/jbolus-owens/factory
+module github.com/josephbolus/agentfactory
 
 go 1.25.13
 

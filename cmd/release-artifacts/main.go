@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/jbolus-owens/factory/internal/releasebuilder"
+	"github.com/josephbolus/agentfactory/internal/releasebuilder"
 )
 
 func main() {

@@ -17,8 +17,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/controlplane"
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/controlplane"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestDemoIssueIntakeCommitsMarkdownPlan(t *testing.T) {
@@ -111,7 +111,7 @@ printf '%s\n' 'provider model context max-out thinking images' 'openrouter moons
 	server := httptest.NewServer(controlplane.NewHandler(store, slog.New(slog.NewTextHandler(io.Discard, nil))))
 	defer server.Close()
 	repository, _, err := store.CreateManagedRepository(context.Background(), protocol.CreateManagedRepositoryRequest{
-		RemoteIdentity: "github.com/jbolus-owens/factory-demo",
+		RemoteIdentity: "github.com/josephbolus/factory-demo",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -225,11 +225,11 @@ case "${1:-} ${2:-}" in
 		;;
 	'issue create')
 		: >"$FACTORY_TEST_GH_ISSUE"
-		printf '%s\n' 'https://github.com/jbolus-owens/factory-demo/issues/42'
+		printf '%s\n' 'https://github.com/josephbolus/factory-demo/issues/42'
 		;;
 	'issue list')
 		if [ -f "$FACTORY_TEST_GH_ISSUE" ]; then
-			printf '%s\n' '[{"number":42,"title":"Fix case-insensitive product search","url":"https://github.com/jbolus-owens/factory-demo/issues/42"}]'
+			printf '%s\n' '[{"number":42,"title":"Fix case-insensitive product search","url":"https://github.com/josephbolus/factory-demo/issues/42"}]'
 		else
 			printf '%s\n' '[]'
 		fi
@@ -247,13 +247,13 @@ case "${1:-} ${2:-}" in
 	'api user')
 		printf '%s\n' '{"login":"factory-bot"}'
 		;;
-	'api repos/jbolus-owens/factory-demo')
+	'api repos/josephbolus/factory-demo')
 		printf '%s\n' '{"default_branch":"main"}'
 		;;
-	'api repos/jbolus-owens/factory-demo/git/ref/heads/main')
+	'api repos/josephbolus/factory-demo/git/ref/heads/main')
 		printf '%s\n' '{"object":{"sha":"demo-commit"}}'
 		;;
-	'api repos/jbolus-owens/factory-demo/git/trees/'*)
+	'api repos/josephbolus/factory-demo/git/trees/'*)
 		printf '%s\n' '{"tree":[]}'
 		;;
 	'api '*)

@@ -16,11 +16,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/buildinfo"
-	"github.com/jbolus-owens/factory/internal/controlplane"
-	"github.com/jbolus-owens/factory/internal/protocol"
-	"github.com/jbolus-owens/factory/internal/statepath"
-	factoryweb "github.com/jbolus-owens/factory/web"
+	"github.com/josephbolus/agentfactory/internal/buildinfo"
+	"github.com/josephbolus/agentfactory/internal/controlplane"
+	"github.com/josephbolus/agentfactory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/statepath"
+	factoryweb "github.com/josephbolus/agentfactory/web"
 )
 
 func main() {

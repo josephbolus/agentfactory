@@ -10,14 +10,14 @@ func TestFormatAgentPromptPreservesSafetyAndBranchContract(t *testing.T) {
 		"Work only on the assigned Session and repository. Preserve unrelated changes and do not touch Factory state or unrelated worktrees. " +
 		"Do not switch, create, rename, or delete branches or worktrees. Complete and verify the Session before returning a concise result.\n\n" +
 		"Task: Fix the prompt\n" +
-		"Repository: github.com/jbolus-owens/factory\n" +
+		"Repository: github.com/josephbolus/agentfactory\n" +
 		"Working branch: factory/123456789abc-abcdef123456\n" +
 		"Target base branch: main\n\n" +
 		"Keep the change focused."
 
 	if got := FormatAgentPrompt(
 		"Fix the prompt",
-		"github.com/jbolus-owens/factory",
+		"github.com/josephbolus/agentfactory",
 		"factory/123456789abc-abcdef123456",
 		"main",
 		"Keep the change focused.",
@@ -30,7 +30,7 @@ func TestFormatAgentUpdatePromptNamesImmutablePublishBranch(t *testing.T) {
 	const publishBranch = "factory/work-1111111111111111"
 	prompt := FormatAgentUpdatePrompt(
 		"Fix the prompt",
-		"github.com/jbolus-owens/factory",
+		"github.com/josephbolus/agentfactory",
 		"factory/123456789abc-abcdef123456",
 		"main",
 		publishBranch,
@@ -42,7 +42,7 @@ func TestFormatAgentUpdatePromptNamesImmutablePublishBranch(t *testing.T) {
 		t.Fatalf("agent-update prompt = %q", prompt)
 	}
 	if !AgentUpdatePromptFits(
-		"Fix the prompt", "github.com/jbolus-owens/factory", publishBranch, "Keep the change focused.",
+		"Fix the prompt", "github.com/josephbolus/agentfactory", publishBranch, "Keep the change focused.",
 	) {
 		t.Fatal("bounded agent-update prompt rejected the exact publish branch")
 	}

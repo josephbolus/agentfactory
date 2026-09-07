@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/buildinfo"
+	"github.com/josephbolus/agentfactory/internal/buildinfo"
 )
 
 const defaultServer = "http://127.0.0.1:7337"

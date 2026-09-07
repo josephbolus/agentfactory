@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestGitHubWorkflowSourceUsesRESTRepositorySlug(t *testing.T) {

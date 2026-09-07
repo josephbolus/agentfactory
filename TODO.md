@@ -19,7 +19,7 @@ Status: delivered to PR #14; awaiting review and merge. Owner: `/root`.
 ## Verification evidence
 
 - [x] Failing-first regression tests recorded for slug injection, intake refresh count, scheduled snapshot, truncated tree, empty labels, default Build, and UI fallback/blocking behavior.
-- [x] Live GitHub path proof: `gh api repos/jbolus-owens/factory --jq '.full_name + " " + .default_branch'` returned `jbolus-owens/factory main` with host-keychain access (`require_escalated`); credentials were not exposed.
+- [x] Live GitHub path proof: `gh api repos/josephbolus/agentfactory --jq '.full_name + " " + .default_branch'` returned `josephbolus/agentfactory main` with host-keychain access (`require_escalated`); credentials were not exposed.
 - [x] Focused Go tests and `make test` complete on the final tree.
 - [x] Go race (`286` worker tests), `go vet`, vulnerability, and static analysis checks complete.
 - [x] UI lint, typecheck, unit tests (`47`), and production build complete.

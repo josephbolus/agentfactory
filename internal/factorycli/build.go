@@ -12,7 +12,7 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func (c command) runBuild(server string, jsonOutput bool, arguments []string) error {

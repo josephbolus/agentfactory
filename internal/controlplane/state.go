@@ -8,7 +8,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func (s *Store) Claim(ctx context.Context, workerID string, input protocol.ClaimRequest) (*protocol.Claim, error) {

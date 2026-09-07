@@ -3,7 +3,7 @@
 Paste after `/goal` (see compact prompt at the bottom). Defaults below are
 **Recommended** until keep/drop answers override them.
 
-Repo: `/home/jbolus/factory-main` (`github.com/jbolus-owens/factory`).
+Repo: `/home/jbolus/factory-main` (`github.com/josephbolus/agentfactory`).
 Do not start from Machinist, Rust `FACTORY`, or `0cee079`. Those are spec
 and prompt sources only.
 

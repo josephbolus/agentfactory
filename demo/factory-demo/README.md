@@ -77,7 +77,7 @@ npm start
 
 Refresh http://127.0.0.1:3000 and enter `factory` again. **Agent Factory T-Shirt**
 now appears. This is the existing Agent Factory-created fix branch from
-https://github.com/jbolus-owens/factory-demo/pull/4. A new demo run will create
+https://github.com/josephbolus/agentfactory-demo/pull/4. A new demo run will create
 its own branch and pull request with different identifiers.
 
 To return to the baseline app afterwards:

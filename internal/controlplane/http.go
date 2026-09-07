@@ -16,7 +16,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 type API struct {

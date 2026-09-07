@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/jbolus-owens/factory/internal/protocol"
-	"github.com/jbolus-owens/factory/internal/statepath"
+	"github.com/josephbolus/agentfactory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/statepath"
 )
 
 const (

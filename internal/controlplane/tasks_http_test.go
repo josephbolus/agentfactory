@@ -11,14 +11,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestRunSummaryCountsAttemptsWithoutReturningTheirBodies(t *testing.T) {
 	store := newTestStore(t)
 	ctx := context.Background()
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(ctx, protocol.SaveTaskRequest{
 		Name: "Review Factory", Prompt: "Review the repository.", Runtime: protocol.RuntimeCodex,
@@ -127,7 +127,7 @@ func TestWorkerSummariesDoNotReadOperationalJSON(t *testing.T) {
 	store := newTestStore(t)
 	ctx := context.Background()
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	if _, err := store.db.ExecContext(ctx, `
 		UPDATE workers

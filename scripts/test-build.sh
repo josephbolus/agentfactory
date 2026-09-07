@@ -3,7 +3,7 @@
 set -eu
 
 root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
-just_binary=$(command -v just)
+make_binary=$(command -v make)
 temporary=$(mktemp -d)
 trap 'rm -rf "$temporary"' EXIT
 mkdir -p "$temporary/bin"
@@ -58,7 +58,7 @@ mkdir -p "$temporary/home"
   HOME="$temporary/home" \
   FACTORY_TEST_GO_LOG="$temporary/default-go.log" \
   PATH="$temporary/bin:/usr/bin:/bin" \
-    "$just_binary" --justfile "$root/Justfile" --working-directory "$root" build
+    "$make_binary" -C "$root" build
 )
 
 test -x "$temporary/home/.factory/bin/factory-server"
@@ -167,7 +167,7 @@ fi
 FACTORY_V2_BUILD_DIR="$temporary/output" \
 FACTORY_TEST_GO_LOG="$temporary/go.log" \
 PATH="$temporary/bin:/usr/bin:/bin" \
-  "$just_binary" --justfile "$root/Justfile" --working-directory "$root" build
+  "$make_binary" -C "$root" build
 
 test -x "$temporary/output/factory-server"
 test -x "$temporary/output/factory-worker"
@@ -178,12 +178,9 @@ grep -q 'build -o .*factory ./cmd/factory' "$temporary/go.log"
 grep -q 'build -o .*factory-server ./cmd/factory-server' "$temporary/go.log"
 grep -q 'build -o .*factory-worker ./cmd/factory-worker' "$temporary/go.log"
 
-commands=$(
-  "$just_binary" --justfile "$root/Justfile" --working-directory "$root" --list
-)
-if printf '%s\n' "$commands" | grep -Eq '(^|[[:space:]])poll(-once|-test)?([[:space:]]|$)'; then
-  echo "retired poller command remains in Justfile" >&2
-  echo "$commands" >&2
+test ! -e "$root/Justfile"
+if grep -Eq '^[[:blank:]]*poll(-once|-test)?([[:blank:]]*:|$)' "$root/Makefile"; then
+  echo "retired poller command remains in Makefile" >&2
   exit 1
 fi
 
@@ -197,7 +194,7 @@ output=$(
     FACTORY_DATA_HOME="$temporary/data" \
     FACTORY_LISTEN="127.0.0.1:1" \
     FACTORY_TEST_GO_LOG="$temporary/go.log" \
-    PATH="$temporary/bin:$(dirname "$just_binary"):/usr/bin:/bin" \
+    PATH="$temporary/bin:$(dirname "$make_binary"):/usr/bin:/bin" \
     "$root/scripts/run-local.sh" "$temporary/worker.toml" 2>&1
 )
 status=$?
@@ -230,9 +227,9 @@ chmod +x "$temporary/ui-bin/node" "$temporary/ui-bin/npm"
 FACTORY_V2_SKIP_INSTALL=1 \
 FACTORY_TEST_NPM_LOG="$temporary/npm.log" \
 PATH="$temporary/ui-bin:/usr/bin:/bin" \
-  "$just_binary" --justfile "$root/Justfile" --working-directory "$root" ui-build 0
+  "$make_binary" -C "$root" ui-build INSTALL=0
 
 test "$(wc -l <"$temporary/npm.log" | tr -d ' ')" = "1"
 grep -qx 'run build' "$temporary/npm.log"
 
-echo "Agent Factory Just recipes preserve the Node-free operator build and tested launcher route."
+echo "Agent Factory Make recipes preserve the Node-free operator build and tested launcher route."

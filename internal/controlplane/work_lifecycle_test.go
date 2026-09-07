@@ -6,13 +6,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestOutcomeContractConversionFreezesAdmittedRuns(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Contract conversion", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -67,7 +67,7 @@ func TestOutcomeContractConversionFreezesAdmittedRuns(t *testing.T) {
 func TestAgentUpdateRejectsFakeCloudWithoutStateChange(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	profile := createFakeProfile(t, store, "Legacy synthetic", protocol.RuntimeCodex, "succeeded")
 	task := createProfileTask(t, store, worker.Repositories[0].ID, profile.ID)
@@ -120,7 +120,7 @@ func TestAgentUpdateRejectsFakeCloudWithoutStateChange(t *testing.T) {
 func TestWorkLifecycleStatesTargetsAndUpdateBounds(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Durable Work", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -166,7 +166,7 @@ func TestWorkLifecycleStatesTargetsAndUpdateBounds(t *testing.T) {
 		{protocol.WorkQueued, `execution_owner = 'none', terminal_at = NULL`, nil},
 		{protocol.WorkRunning, `execution_owner = 'worker_attempt', terminal_at = NULL`, nil},
 		{protocol.WorkNeedsInput, `execution_owner = 'none', question = 'Which behavior?', checkpoint_sha = 'abc', pending_resume_sha = 'abc', terminal_at = NULL`, nil},
-		{protocol.WorkReady, `execution_owner = 'none', pull_request_url = 'https://github.com/jbolus-owens/factory/pull/1', terminal_at = 1`, nil},
+		{protocol.WorkReady, `execution_owner = 'none', pull_request_url = 'https://github.com/josephbolus/agentfactory/pull/1', terminal_at = 1`, nil},
 		{protocol.WorkFailed, `execution_owner = 'none', terminal_at = 1`, nil},
 		{protocol.WorkNoChange, `execution_owner = 'none', terminal_at = 1`, nil},
 		{protocol.WorkCancelled, `execution_owner = 'none', terminal_at = 1`, nil},
@@ -220,7 +220,7 @@ func TestWorkLifecycleStatesTargetsAndUpdateBounds(t *testing.T) {
 func TestRetryRejectsReplacedWorkTransactionally(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Replacement guard", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -259,7 +259,7 @@ func TestRetryRejectsReplacedWorkTransactionally(t *testing.T) {
 func TestRepositoryRetryRejectsMatchingNonterminalLineage(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Lineage guard", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -304,7 +304,7 @@ func TestRepositoryRetryRejectsMatchingNonterminalLineage(t *testing.T) {
 func TestRepositoryRetryAllowsIndependentProcedureRun(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Independent retry", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -335,7 +335,7 @@ func TestRepositoryRetryAllowsIndependentProcedureRun(t *testing.T) {
 func TestMaximumLegacyProcessExitPromptRemainsAdmissible(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Maximum legacy prompt", Prompt: strings.Repeat("x", protocol.MaxTaskPromptBytes),
@@ -364,7 +364,7 @@ func TestProcessExitCompletionPreservesMaximumLegacyPayloads(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			store := newTestStore(t)
 			worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-				Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+				Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 			})
 			task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 				Name: "Maximum " + test.name, Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -416,7 +416,7 @@ func TestProcessExitCompletionPreservesMaximumLegacyPayloads(t *testing.T) {
 func TestFakeCloudCompletionPreservesMaximumLegacyResult(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	maximumResult := strings.Repeat("r", protocol.MaxResultBytes)
 	profile, err := store.CreateExecutionProfile(context.Background(), protocol.SaveExecutionProfileRequest{
@@ -448,7 +448,7 @@ func TestFakeCloudCompletionPreservesMaximumLegacyResult(t *testing.T) {
 func TestAgentUpdateProcessExitWithoutOutcomeFailsVisibly(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Missing semantic outcome", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -509,7 +509,7 @@ func TestAgentUpdateProcessExitWithoutOutcomeFailsVisibly(t *testing.T) {
 func TestAgentUpdateCompletionPreservesInfrastructureFailure(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Preparation failure", Prompt: "Review.", Runtime: protocol.RuntimeCodex,
@@ -550,7 +550,7 @@ func TestAgentUpdateCompletionPreservesInfrastructureFailure(t *testing.T) {
 func TestPendingCancellationWinsAgentUpdateCompletion(t *testing.T) {
 	store := newTestStore(t)
 	worker := registerTestWorker(t, store, workerA, 10, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(context.Background(), protocol.SaveTaskRequest{
 		Name: "Cancellation wins", Prompt: "Review.", Runtime: protocol.RuntimeCodex,

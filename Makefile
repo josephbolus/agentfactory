@@ -1,7 +1,11 @@
 SHELL := /bin/bash
+.SHELLFLAGS := -euo pipefail -c
 
 ROOT := $(CURDIR)
-DEMO_OWNER := jbolus-owens
+DATA_HOME ?= $(or $(FACTORY_DATA_HOME),$(FACTORY_V2_DATA_HOME),$(HOME)/.factory)
+BUILD_DIR ?= $(or $(FACTORY_BUILD_DIR),$(FACTORY_V2_BUILD_DIR),$(DATA_HOME)/bin)
+
+DEMO_OWNER := josephbolus
 DEMO_REPO := $(DEMO_OWNER)/factory-demo
 PROJECT_NUMBER := 1
 PROJECT_ID := PVT_kwHOEA3W384BhRJz
@@ -15,66 +19,126 @@ DEMO_PORT := 7339
 DEMO_ADDRESS := 127.0.0.1:$(DEMO_PORT)
 DEMO_URL := http://$(DEMO_ADDRESS)
 
-.PHONY: all check format-check vet vuln staticcheck boundary test-go test-worker-race test-tooling test-launcher test-local-runtimes ui-check test-browser test-release test help demo-setup demo-start demo-stop demo-status demo-autopoll demo-issue-search demo-issue-total demo-issue-dba
+.PHONY: all default build run ui-install ui-build ui-check test-browser format-check vet vuln staticcheck boundary test test-go test-worker-race test-tooling test-launcher release test-release check help demo-setup demo-start demo-stop demo-status demo-autopoll demo-issue-search demo-issue-total demo-issue-dba demo-issue test-local-runtimes
 
-# Run the documented local check suite through the canonical Just recipes.
-all: test
+default: check
 
-check:
-	@just check
+# Build operator binaries from committed embedded UI assets. Node is not used.
+build:
+	@mkdir -p "$(BUILD_DIR)"
+	go build -o "$(BUILD_DIR)/factory" ./cmd/factory
+	go build -o "$(BUILD_DIR)/factory-server" ./cmd/factory-server
+	go build -o "$(BUILD_DIR)/factory-worker" ./cmd/factory-worker
+	@printf 'Agent Factory binaries built in %s\n' "$(BUILD_DIR)"
 
+# Start one control plane and worker. Pass CONFIG=... when needed.
+run:
+	@if [ -n "$(CONFIG)" ]; then ./scripts/run-local.sh "$(CONFIG)"; else ./scripts/run-local.sh; fi
+
+# Install pinned UI dependencies.
+ui-install:
+	cd web && npm ci
+
+# Rebuild committed embedded UI assets. Pass INSTALL=0 to reuse installed dependencies.
+INSTALL ?= 1
+ui-build:
+	@if [ "$(INSTALL)" = "1" ] && [ -z "$$FACTORY_V2_SKIP_INSTALL" ]; then cd web && npm ci; fi
+	cd web && npm run build
+
+# Run UI lint, type checks, and component tests.
+ui-check:
+	cd web && npm run lint
+	cd web && npm run typecheck
+	cd web && npm test
+
+# Run browser tests against the real Go server.
+test-browser:
+	cd web && npm run test:browser
+
+# Report Go files that need formatting.
 format-check:
-	@just format-check
+	@test -z "$$(find cmd internal migrations web -path web/node_modules -prune -o -name '*.go' -exec gofmt -l {} +)"
 
+# Run Go static analysis.
 vet:
-	@just vet
+	go vet ./...
 
+# Fail on reachable Go vulnerabilities using the supported patched toolchain.
 vuln:
-	@just vuln
+	go run golang.org/x/vuln/cmd/govulncheck@latest ./...
 
+# Run correctness and dead-code checks without style-only churn.
 staticcheck:
-	@just staticcheck
+	go run honnef.co/go/tools/cmd/staticcheck@latest -checks 'SA*,U1000' ./...
 
+# Prove workers do not import control-plane implementation code.
 boundary:
-	@just boundary
+	@! go list -deps ./internal/worker | grep -qx 'github.com/josephbolus/agentfactory/internal/controlplane'
+
+# Run all Go tests.
+test: test-go
 
 test-go:
-	@just test
+	go test -timeout 5m ./...
 
+# Race-check the worker package, including coordination and process cancellation.
 test-worker-race:
-	@just test-worker-race
+	@set -euo pipefail; \
+	log="$$(mktemp)"; \
+	trap 'rm -f "$$log"' EXIT; \
+	go test -timeout 5m -race -count=1 -v ./internal/worker 2>&1 | tee "$$log"; \
+	count="$$(grep -c '^=== RUN   Test' "$$log" || true)"; \
+	if [ "$$count" -eq 0 ]; then \
+		printf 'test-worker-race selected zero tests in ./internal/worker\n' >&2; \
+		exit 1; \
+	fi; \
+	printf 'test-worker-race ran %s tests with the race detector\n' "$$count"
 
+# Test the Node-free build and command surface.
 test-tooling:
-	@just test-tooling
+	./scripts/test-build.sh
+	./scripts/test-update-go-minimum.sh
 
+# Test local startup, readiness, and signal handling.
 test-launcher:
-	@just test-launcher
+	./scripts/test-run-local.sh
 
 test-local-runtimes:
 	@FACTORY_TEST_LOCAL_RUNTIMES=1 go test ./internal/worker -run '^TestLocalRuntimeProfiles$$' -count=1
 
-ui-check:
-	@just ui-check
+# Build a tagged release set from the current checkout.
+VERSION ?=
+COMMIT ?=
+OUTPUT ?= dist
+release:
+	./scripts/release.sh "$(VERSION)" "$(COMMIT)" "$(OUTPUT)"
 
-test-browser:
-	@just test-browser
-
+# Rebuild twice and verify every release target and native version output.
 test-release:
-	@just test-release
+	./scripts/test-release.sh
+
+# Run the normal local and CI checks, excluding the slower browser suite.
+check: format-check vet vuln staticcheck boundary test-go ui-check test-tooling test-launcher
 
 # Include the browser, race, and reproducible-release checks.
-test: check test-worker-race test-browser test-release
+all: check test-worker-race test-browser test-release
 
 help:
-	@echo 'Agent Factory demo commands:'
+	@echo 'Agent Factory make targets:'
+	@echo '  make build              Build factory, factory-server, and factory-worker'
+	@echo '  make run [CONFIG=...]   Start local control plane and worker'
+	@echo '  make check              Run format, vet, vuln, staticcheck, boundary, test-go, ui-check, tooling'
+	@echo '  make format-check       Check Go formatting'
+	@echo '  make vet                Run go vet'
+	@echo '  make boundary           Verify worker does not import controlplane'
+	@echo '  make staticcheck        Run staticcheck'
+	@echo '  make test-go            Run Go unit tests'
+	@echo '  make ui-check           Run UI lint, typecheck, and component tests'
 	@echo '  make demo-setup         Build Agent Factory and configure a clean demo Worker'
-	@echo '  make demo-start         Start Agent Factory server and worker (or show its URL)'
-	@echo '  make demo-stop          Stop this demo server and worker'
-	@echo '  make demo-status        Show whether this demo is running'
-	@echo '  make demo-autopoll      Start the 30-second GitHub intake demo'
-	@echo '  make demo-issue-search  Create Ready + needs-agent search bug issue'
-	@echo '  make demo-issue-total   Create Ready + needs-agent cart-total bug issue'
-	@echo '  make demo-issue-dba     Create a database index review issue'
+	@echo '  make demo-start         Start Agent Factory server and worker'
+	@echo '  make demo-stop          Stop demo server and worker'
+	@echo '  make demo-status        Show demo status'
+	@echo '  make demo-autopoll      Start GitHub intake demo'
 	@echo '  make test-local-runtimes Check configured Pi and Claude models'
 
 demo-setup:
@@ -148,7 +212,6 @@ demo-issue-total:
 demo-issue-dba:
 	@TITLE='Review missing database index' LABEL='team:dba' BODY=$$'The orders query regressed after the latest data growth. Review index coverage and representative query plans.\n\nAcceptance criteria:\n- Reproduce the slow query with a focused fixture.\n- Propose the smallest safe index change.\n- Add or update a regression check.\n- `npm test` passes.' $(MAKE) --no-print-directory demo-issue
 
-.PHONY: demo-issue
 demo-issue:
 	@test -f "$(SERVER_PID)" && test -f "$(WORKER_PID)" || { echo 'This checkout demo is not running. Run make demo-start first.' >&2; exit 1; }; \
 	kill -0 "$$(cat "$(SERVER_PID)")" 2>/dev/null || { echo 'This checkout demo server is not running.' >&2; exit 1; }; \

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestBuildPromptIncludesGrammaticalSafetyInstruction(t *testing.T) {
@@ -16,7 +16,7 @@ func TestBuildPromptIncludesGrammaticalSafetyInstruction(t *testing.T) {
 			TaskName: "Fix the prompt",
 			Prompt:   "Keep the change focused.",
 		},
-		Repository: protocol.Repository{RemoteIdentity: "github.com/jbolus-owens/factory"},
+		Repository: protocol.Repository{RemoteIdentity: "github.com/josephbolus/agentfactory"},
 	}
 	value := worktree{Branch: "factory/123456789abc-abcdef123456", BaseBranch: "main"}
 
@@ -24,7 +24,7 @@ func TestBuildPromptIncludesGrammaticalSafetyInstruction(t *testing.T) {
 		"Work only on the assigned Session and repository. Preserve unrelated changes and do not touch Factory state or unrelated worktrees. " +
 		"Do not switch, create, rename, or delete branches or worktrees. Complete and verify the Session before returning a concise result.\n\n" +
 		"Task: Fix the prompt\n" +
-		"Repository: github.com/jbolus-owens/factory\n" +
+		"Repository: github.com/josephbolus/agentfactory\n" +
 		"Working branch: factory/123456789abc-abcdef123456\n" +
 		"Target base branch: main\n\n" +
 		"Keep the change focused."
@@ -64,7 +64,7 @@ func TestBuildPromptAddsUpdateContractOnlyForAgentUpdateWork(t *testing.T) {
 			TaskName: "Report progress", Prompt: "Do the work.", OutcomeContract: protocol.OutcomeAgentUpdate,
 			Target: protocol.WorkTarget{PublishBranch: "factory/work-1111111111111111"},
 		},
-		Repository: protocol.Repository{RemoteIdentity: "github.com/jbolus-owens/factory"},
+		Repository: protocol.Repository{RemoteIdentity: "github.com/josephbolus/agentfactory"},
 	}
 	prompt := buildPrompt(claim, worktree{Branch: "factory/local", BaseBranch: "main"})
 	for _, expected := range []string{
@@ -88,7 +88,7 @@ func TestBuildStagePromptExposesUpdatesOnlyToFinalStage(t *testing.T) {
 		Session: protocol.ClaimedSession{
 			TaskName: "Review the work", OutcomeContract: protocol.OutcomeAgentUpdate,
 		},
-		Repository: protocol.Repository{RemoteIdentity: "github.com/jbolus-owens/factory"},
+		Repository: protocol.Repository{RemoteIdentity: "github.com/josephbolus/agentfactory"},
 	}
 	stage := protocol.StageRun{Prompt: "Inspect the current branch."}
 	value := worktree{Branch: "factory/local", BaseBranch: "main"}

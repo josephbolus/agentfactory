@@ -3,7 +3,7 @@ package controlplane
 import (
 	"net/http"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func (a *API) listRepositoryWorkflows(w http.ResponseWriter, r *http.Request) {

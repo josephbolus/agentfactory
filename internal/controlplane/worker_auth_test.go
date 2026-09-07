@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestEnrolledWorkerAuthenticatesBeforeFirstRegistration(t *testing.T) {

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/jbolus-owens/factory/internal/factorycli"
+	"github.com/josephbolus/agentfactory/internal/factorycli"
 )
 
 func main() {

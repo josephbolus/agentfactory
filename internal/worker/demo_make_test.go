@@ -132,7 +132,7 @@ func TestDemoIssueTargetsMoveGitHubProjectItem(t *testing.T) {
 				t.Fatalf("gh commands = %q", got)
 			}
 			for _, want := range []string{
-				"jbolus-owens/factory-demo", "item-id", "PVT_kwHOEA3W384BhRJz",
+				"josephbolus/factory-demo", "item-id", "PVT_kwHOEA3W384BhRJz",
 				"PVTSSF_lAHOEA3W384BhRJzzhgNgMI", "4c7740f5", "needs-agent",
 			} {
 				if !strings.Contains(readTestFile(t, harness.arguments), want) {

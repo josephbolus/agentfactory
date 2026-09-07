@@ -71,18 +71,18 @@ if ! command -v curl >/dev/null 2>&1; then
 fi
 
 if [ "$skip_build" != "1" ]; then
-  if ! command -v just >/dev/null 2>&1; then
-    echo "Agent Factory local startup requires just on PATH." >&2
+  if ! command -v make >/dev/null 2>&1; then
+    echo "Agent Factory local startup requires make on PATH." >&2
     exit 1
   fi
   FACTORY_BUILD_DIR="$build_directory" \
-    just --justfile "$root/Justfile" --working-directory "$root" build
+    make -C "$root" build
 fi
 
 server_binary="$build_directory/factory-server"
 worker_binary="$build_directory/factory-worker"
 if [ ! -x "$server_binary" ] || [ ! -x "$worker_binary" ]; then
-  echo "Agent Factory binaries are missing. Run just build first." >&2
+  echo "Agent Factory binaries are missing. Run make build first." >&2
   exit 1
 fi
 

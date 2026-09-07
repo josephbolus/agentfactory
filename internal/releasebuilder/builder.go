@@ -163,8 +163,8 @@ func Build(ctx context.Context, options Options) error {
 		}
 		ldflags := strings.Join([]string{
 			"-s", "-w", "-buildid=",
-			"-X", "github.com/jbolus-owens/factory/internal/buildinfo.Version=" + options.Version,
-			"-X", "github.com/jbolus-owens/factory/internal/buildinfo.Commit=" + options.Commit,
+			"-X", "github.com/josephbolus/agentfactory/internal/buildinfo.Version=" + options.Version,
+			"-X", "github.com/josephbolus/agentfactory/internal/buildinfo.Commit=" + options.Commit,
 		}, " ")
 		environment := releaseGoEnvironment("CGO_ENABLED=0", "GOOS="+target.OS, "GOARCH="+target.Arch)
 		if err := runCommand(ctx, root, environment, "go", "build", "-mod=readonly", "-trimpath", "-buildvcs=false", "-ldflags", ldflags, "-o", binaryDirectory, "./cmd/factory", "./cmd/factory-server", "./cmd/factory-worker"); err != nil {
@@ -651,14 +651,14 @@ func renderSPDX(version, commit string, sourceTime time.Time, archive, digest st
 	document := spdxDocument{
 		SPDXVersion: "SPDX-2.3", DataLicense: "CC0-1.0", SPDXID: "SPDXRef-DOCUMENT",
 		Name:              strings.TrimSuffix(archive, ".tar.gz"),
-		DocumentNamespace: "https://github.com/jbolus-owens/factory/releases/download/" + version + "/" + archive + ".spdx.json",
+		DocumentNamespace: "https://github.com/josephbolus/agentfactory/releases/download/" + version + "/" + archive + ".spdx.json",
 		CreationInfo:      spdxCreationInfo{Created: sourceTime.UTC().Format(time.RFC3339), Creators: []string{"Tool: factory-release"}},
 		Packages: []spdxPackage{{
 			SPDXID: rootID, Name: "factory", VersionInfo: version, PackageFileName: archive,
-			DownloadLocation: "https://github.com/jbolus-owens/factory/releases/download/" + version + "/" + archive,
+			DownloadLocation: "https://github.com/josephbolus/agentfactory/releases/download/" + version + "/" + archive,
 			FilesAnalyzed:    false, LicenseConcluded: "MIT", LicenseDeclared: "MIT",
 			Checksums:    []spdxChecksum{{Algorithm: "SHA256", ChecksumValue: digest}},
-			ExternalRefs: []spdxRef{{ReferenceCategory: "OTHER", ReferenceType: "vcs", ReferenceLocator: "git+https://github.com/jbolus-owens/factory@" + commit}},
+			ExternalRefs: []spdxRef{{ReferenceCategory: "OTHER", ReferenceType: "vcs", ReferenceLocator: "git+https://github.com/josephbolus/agentfactory@" + commit}},
 		}},
 		Relationships: []spdxRelationship{{Element: "SPDXRef-DOCUMENT", Type: "DESCRIBES", Related: rootID}},
 	}

@@ -155,7 +155,7 @@ The only per-execution environment overrides are `ATTEMPT_ID`, `INPUT_URI`, and
   "version": 2,
   "attempt_id": "attempt-...",
   "dispatch_nonce": "32 lowercase hexadecimal characters",
-  "repository_url": "https://github.com/jbolus-owens/factory.git",
+  "repository_url": "https://github.com/josephbolus/agentfactory.git",
   "git_commit": "full 40 character commit",
   "prompt": "the agent task",
   "agent_mode": "read-only",

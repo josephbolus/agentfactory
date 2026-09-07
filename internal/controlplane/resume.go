@@ -12,7 +12,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 type sqlQueryer interface {

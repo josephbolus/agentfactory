@@ -5,5 +5,5 @@ import { writeFile } from "node:fs/promises";
 // focused on Agent Factory packages after npm install.
 await writeFile(
   new URL("../node_modules/go.mod", import.meta.url),
-  "module github.com/jbolus-owens/factory/web/node_modules\n\ngo 1.25\n",
+  "module github.com/josephbolus/agentfactory/web/node_modules\n\ngo 1.25\n",
 );

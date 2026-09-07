@@ -10,8 +10,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
-	"github.com/jbolus-owens/factory/migrations"
+	"github.com/josephbolus/agentfactory/internal/protocol"
+	"github.com/josephbolus/agentfactory/migrations"
 )
 
 func TestBackupAndRestorePreserveDurableControlPlaneState(t *testing.T) {
@@ -25,7 +25,7 @@ func TestBackupAndRestorePreserveDurableControlPlaneState(t *testing.T) {
 	defer store.Close()
 
 	worker := registerTestWorker(t, store, workerA, 1, protocol.RepositoryRegistration{
-		Key: "factory", RemoteIdentity: "github.com/jbolus-owens/factory",
+		Key: "factory", RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	task, err := store.CreateTask(ctx, protocol.SaveTaskRequest{
 		Name: "Recovery task", Prompt: "Preserve this Run.", Runtime: protocol.RuntimeCodex,

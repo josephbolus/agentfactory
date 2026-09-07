@@ -4,7 +4,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func (a *API) answerWork(w http.ResponseWriter, r *http.Request) {

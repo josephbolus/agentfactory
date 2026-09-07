@@ -17,7 +17,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 // supervisorSession drives a real RunSupervisor over its control pipe and

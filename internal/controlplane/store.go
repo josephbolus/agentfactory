@@ -17,8 +17,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
-	"github.com/jbolus-owens/factory/migrations"
+	"github.com/josephbolus/agentfactory/internal/protocol"
+	"github.com/josephbolus/agentfactory/migrations"
 	_ "modernc.org/sqlite"
 )
 

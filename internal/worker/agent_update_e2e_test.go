@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/controlplane"
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/controlplane"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestAgentUpdateSupervisorHelper(t *testing.T) {

@@ -19,7 +19,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestFiniteCommandsUseLoopbackAPIWithHumanAndJSONOutput(t *testing.T) {
@@ -35,7 +35,7 @@ func TestFiniteCommandsUseLoopbackAPIWithHumanAndJSONOutput(t *testing.T) {
 		AdmittedAt: run.AdmittedAt, UpdatedAt: run.UpdatedAt,
 	}
 	detail := protocol.RunDetail{Run: run, Sessions: []protocol.Session{{
-		ID: "session-1", RepositoryIdentity: "github.com/jbolus-owens/factory",
+		ID: "session-1", RepositoryIdentity: "github.com/josephbolus/agentfactory",
 		State: protocol.SessionRunning, AssignedWorkerID: "worker-1",
 		Attempts: []protocol.Attempt{{ID: "attempt-1"}}, Result: "safe\x1b[2Junsafe\x00end\n" + strings.Repeat("🙂", 100),
 	}}}
@@ -97,7 +97,7 @@ func TestFiniteCommandsUseLoopbackAPIWithHumanAndJSONOutput(t *testing.T) {
 		contains  []string
 	}{
 		{[]string{"--server", server.URL, "status"}, []string{"RUN ID", `run-\u001B[2J1`, "Review Factory", `running\u0000`, `cursor\u001B[2J`, "2026-08-22T09:11:12Z"}},
-		{[]string{"--server", server.URL, "show", "run-1"}, []string{`Run: run-\u001B[2J1`, "SESSION ID", "github.com/jbolus-owens/factory", "ATTEMPTS", `safe\u001B[2Junsafe\u0000end`}},
+		{[]string{"--server", server.URL, "show", "run-1"}, []string{`Run: run-\u001B[2J1`, "SESSION ID", "github.com/josephbolus/agentfactory", "ATTEMPTS", `safe\u001B[2Junsafe\u0000end`}},
 		{[]string{"--server", server.URL, "workers"}, []string{"WORKER ID", "worker-1", "healthy", `codex\u001B[2J`}},
 	}
 	for _, test := range tests {
@@ -320,7 +320,7 @@ func TestShowAllowsSummariesLargerThanListLimit(t *testing.T) {
 		if err := json.NewEncoder(output).Encode(protocol.RunSummary{
 			ID: "run-large", TaskName: "Large run",
 			Sessions: []protocol.RunSessionSummary{{
-				ID: "session-large", RepositoryIdentity: "github.com/jbolus-owens/factory",
+				ID: "session-large", RepositoryIdentity: "github.com/josephbolus/agentfactory",
 				State: protocol.SessionSucceeded, Result: result,
 			}},
 		}); err != nil {
@@ -346,7 +346,7 @@ func TestShowUsesBlockedReasonAndReturnsOutputErrors(t *testing.T) {
 		if err := json.NewEncoder(output).Encode(protocol.RunSummary{
 			ID: "run-blocked", TaskName: "Blocked run", State: protocol.RunBlocked,
 			Sessions: []protocol.RunSessionSummary{{
-				ID: "session-blocked", RepositoryIdentity: "github.com/jbolus-owens/factory",
+				ID: "session-blocked", RepositoryIdentity: "github.com/josephbolus/agentfactory",
 				State: protocol.SessionBlocked, BlockedReason: "Repository is disabled.",
 			}},
 		}); err != nil {

@@ -12,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestBuildAdmissionHTTPReturnsTypedCommitStatus(t *testing.T) {
@@ -220,7 +220,7 @@ func TestBuildAdmissionCreatesIndependentAtomicWorkAndSchedulerClaimsIt(t *testi
 		t.Fatal(err)
 	}
 	repository, _, err := store.CreateManagedRepository(context.Background(), protocol.CreateManagedRepositoryRequest{
-		RemoteIdentity: "github.com/jbolus-owens/factory",
+		RemoteIdentity: "github.com/josephbolus/agentfactory",
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -232,7 +232,7 @@ func TestBuildAdmissionCreatesIndependentAtomicWorkAndSchedulerClaimsIt(t *testi
 		RequestKey: "mixed-build", RepositorySpecified: true,
 		Repository: repository.RemoteIdentity,
 		References: []string{
-			"https://github.com/JBOLUS-OWENS/FACTORY/issues/341",
+			"https://github.com/JOSEPHBOLUS/AGENTFACTORY/issues/341",
 			"LINEAR-123",
 			"LINEAR-124",
 		},
@@ -271,7 +271,7 @@ func TestBuildAdmissionCreatesIndependentAtomicWorkAndSchedulerClaimsIt(t *testi
 		}
 		seenBranches[work.Target.PublishBranch] = true
 	}
-	if got := admission.Run.Sessions[0].Target.SourceKey; got != "github:jbolus-owens/factory:issue:341" {
+	if got := admission.Run.Sessions[0].Target.SourceKey; got != "github:josephbolus/agentfactory:issue:341" {
 		t.Fatalf("GitHub source key = %q", got)
 	}
 	claim, err := store.Claim(context.Background(), worker.ID, protocol.ClaimRequest{

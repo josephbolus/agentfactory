@@ -12,7 +12,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/jbolus-owens/factory/migrations"
+	"github.com/josephbolus/agentfactory/migrations"
 )
 
 func syncDirectory(path string) error {

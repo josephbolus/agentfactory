@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jbolus-owens/factory/internal/protocol"
+	"github.com/josephbolus/agentfactory/internal/protocol"
 )
 
 func TestManifestStoreUpgradesVersionOneTaskIdentity(t *testing.T) {
@@ -31,7 +31,7 @@ func TestManifestStoreUpgradesVersionOneTaskIdentity(t *testing.T) {
   "repository_id": "` + repositoryID + `",
   "repository_key": "factory",
   "repository_path": "/tmp/factory-repository",
-  "remote_identity": "github.com/jbolus-owens/factory",
+  "remote_identity": "github.com/josephbolus/agentfactory",
   "base_commit": "1111111111111111111111111111111111111111",
   "worktree_path": "` + filepath.Join(root, "worktrees", attemptID) + `",
   "branch": "factory/` + legacyTaskID[:12] + `-` + attemptID[:12] + `",
@@ -111,7 +111,7 @@ func TestManifestStoreUpgradesVersionTwoSessionIdentity(t *testing.T) {
   "repository_id": "` + repositoryID + `",
   "repository_key": "factory",
   "repository_path": "/tmp/factory-repository",
-  "remote_identity": "github.com/jbolus-owens/factory",
+  "remote_identity": "github.com/josephbolus/agentfactory",
   "base_commit": "1111111111111111111111111111111111111111",
   "worktree_path": "` + filepath.Join(root, "worktrees", attemptID) + `",
   "branch": "factory/` + legacySessionID[:12] + `-` + attemptID[:12] + `",
