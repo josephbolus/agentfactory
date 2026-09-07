@@ -148,7 +148,7 @@ func TestCommentReviewFailureKeepsFindings(t *testing.T) {
 	logPath := filepath.Join(directory, "gh.log")
 	gh := filepath.Join(directory, "gh")
 	body := "#!/bin/sh\n" +
-		"if [ \"$1 $2\" = \"api user\" ]; then printf '{\\\"login\\\":\\\"factory-bot\\\"}'; exit 0; fi\n" +
+		"if [ \"$1 $2\" = \"api user\" ]; then printf '{\"login\":\"factory-bot\"}'; exit 0; fi\n" +
 		"if printf '%s ' \"$@\" | grep -q -- '--slurp'; then printf '[[]]'; exit 0; fi\n" +
 		"printf '%s\\n' \"$@\" >> " + logPath + "\n"
 	if err := os.WriteFile(gh, []byte(body), 0o700); err != nil {
@@ -234,7 +234,7 @@ func TestCommentReviewCreatesIssueComment(t *testing.T) {
 	logPath := filepath.Join(directory, "gh.log")
 	gh := filepath.Join(directory, "gh")
 	body := "#!/bin/sh\n" +
-		"if [ \"$1 $2\" = \"api user\" ]; then printf '{\\\"login\\\":\\\"factory-bot\\\"}'; exit 0; fi\n" +
+		"if [ \"$1 $2\" = \"api user\" ]; then printf '{\"login\":\"factory-bot\"}'; exit 0; fi\n" +
 		"if printf '%s ' \"$@\" | grep -q -- '--slurp'; then printf '[[]]'; exit 0; fi\n" +
 		"printf '%s\\n' \"$@\" >> " + logPath + "\n"
 	if err := os.WriteFile(gh, []byte(body), 0o700); err != nil {
