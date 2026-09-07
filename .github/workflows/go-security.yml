@@ -1,0 +1,18 @@
+name: Go security
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Keep the retired workflow visible without running automation.
+jobs:
+  disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update the declared minimum
+        run: |
+          ./scripts/update-go-minimum.sh "$(go env GOVERSION)"
+          git add go.mod .release/go-version README.md SECURITY.md docs/local.md .github/ISSUE_TEMPLATE/bug_report.yml

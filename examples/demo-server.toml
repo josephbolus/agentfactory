@@ -1,0 +1,5 @@
+# Copied by `make demo-setup` into the isolated demo state directory.
+listen = "127.0.0.1:7339"
+database = "server/factory.sqlite3"
+default_build_runtime = "claude-code"
+github_issue_poll_interval = "30s"

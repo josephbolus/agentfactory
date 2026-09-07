@@ -1,0 +1,41 @@
+# Copied by `make demo-setup` into the isolated demo state directory.
+server = "http://127.0.0.1:7339"
+name = "factory-demo-worker"
+runtime = "claude-code"
+runtimes = ["pi", "codex", "claude-code"]
+max_concurrent = 1
+data_directory = "worker"
+source_access = ["github"]
+
+[[profiles]]
+name = "planner-opus"
+adapter = "claude-code"
+provider = "anthropic"
+model = "claude-opus-5"
+reasoning_effort = "high"
+
+[[profiles]]
+name = "executor-sonnet"
+adapter = "claude-code"
+provider = "anthropic"
+model = "claude-sonnet-4-6"
+reasoning_effort = "medium"
+
+[[profiles]]
+name = "reviewer-opus"
+adapter = "claude-code"
+provider = "anthropic"
+model = "claude-opus-5"
+reasoning_effort = "medium"
+
+[[profiles]]
+name = "fallback-kimi"
+adapter = "pi"
+provider = "openrouter"
+model = "moonshotai/kimi-k3"
+reasoning_effort = "medium"
+
+[roles]
+planner = "planner-opus"
+executor = "executor-sonnet"
+reviewer = "reviewer-opus"

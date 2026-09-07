@@ -1,0 +1,41 @@
+# Copied by `make demo-setup` into the isolated demo state directory.
+server = "http://127.0.0.1:7339"
+name = "factory-demo-worker"
+runtime = "codex"
+runtimes = ["pi", "codex", "claude-code"]
+max_concurrent = 1
+data_directory = "worker"
+source_access = ["github"]
+
+[[profiles]]
+name = "planner-opus"
+adapter = "claude-code"
+provider = "anthropic"
+model = "opus"
+reasoning_effort = "medium"
+
+[[profiles]]
+name = "executor-terra"
+adapter = "codex"
+provider = "openai"
+model = "gpt-5.6-terra"
+reasoning_effort = "medium"
+
+[[profiles]]
+name = "reviewer-sol"
+adapter = "codex"
+provider = "openai"
+model = "gpt-5.6-sol"
+reasoning_effort = "medium"
+
+[[profiles]]
+name = "fallback-kimi"
+adapter = "pi"
+provider = "openrouter"
+model = "moonshotai/kimi-k3"
+reasoning_effort = "medium"
+
+[roles]
+planner = "planner-opus"
+executor = "executor-terra"
+reviewer = "reviewer-sol"

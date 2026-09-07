@@ -1,0 +1,14 @@
+# Legacy local build artifacts.
+/target/
+# Legacy preview state. Current defaults use ~/.factory.
+.factory-v2/
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+.playwright-cli/
+
+# factory-server embeds the reviewed production UI from this directory.
+!/web/dist/
+!/web/dist/**
+.demo/

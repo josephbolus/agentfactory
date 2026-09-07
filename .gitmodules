@@ -1,0 +1,3 @@
+[submodule "demo/factory-demo"]
+	path = demo/factory-demo
+	url = https://github.com/jbolus-owens/factory-demo.git
