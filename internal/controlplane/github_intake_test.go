@@ -318,3 +318,32 @@ func TestGitHubIssueIntakeRearmsAfterLabelRemoval(t *testing.T) {
 		t.Fatalf("distinct request keys = %d, want 2", distinctKeys)
 	}
 }
+
+// TestSplitGitHubRepository pins the remote-identity parsing that the live
+// GraphQL gate depends on: managed repositories store "github.com/owner/name".
+func TestSplitGitHubRepository(t *testing.T) {
+	for _, test := range []struct {
+		repository string
+		owner      string
+		name       string
+		invalid    bool
+	}{
+		{repository: "github.com/josephbolus/agentfactory", owner: "josephbolus", name: "agentfactory"},
+		{repository: "josephbolus/agentfactory", owner: "josephbolus", name: "agentfactory"},
+		{repository: "GitHub.com/JosephBolus/AgentFactory", owner: "josephbolus", name: "agentfactory"},
+		{repository: "bad", invalid: true},
+		{repository: "github.com/", invalid: true},
+		{repository: "github.com/owner/name/extra", invalid: true},
+	} {
+		owner, name, err := splitGitHubRepository(test.repository)
+		if test.invalid {
+			if err == nil {
+				t.Fatalf("splitGitHubRepository(%q) accepted an invalid identity", test.repository)
+			}
+			continue
+		}
+		if err != nil || owner != test.owner || name != test.name {
+			t.Fatalf("splitGitHubRepository(%q) = %q, %q, %v", test.repository, owner, name, err)
+		}
+	}
+}

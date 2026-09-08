@@ -75,18 +75,33 @@ func (githubCLI) ListPullRequests(ctx context.Context, repository string) ([]git
 	return pullRequests, nil
 }
 
+// splitGitHubRepository turns a remote identity such as
+// "github.com/owner/name" into the owner and name GraphQL expects.
+func splitGitHubRepository(repository string) (string, string, error) {
+	slug := strings.TrimPrefix(strings.ToLower(strings.TrimSpace(repository)), "github.com/")
+	owner, name, found := strings.Cut(slug, "/")
+	if !found || owner == "" || name == "" || strings.Contains(name, "/") {
+		return "", "", fmt.Errorf("invalid GitHub repository %q", repository)
+	}
+	return owner, name, nil
+}
+
 // IssueProjectStatus reads the issue's Status field from the Factory GitHub
 // Project. A missing item or status returns an empty string.
 func (githubCLI) IssueProjectStatus(ctx context.Context, repository string, issueNumber int) (string, error) {
-	owner, name, found := strings.Cut(repository, "/")
-	if !found || owner == "" || name == "" {
-		return "", fmt.Errorf("invalid GitHub repository %q", repository)
+	owner, name, err := splitGitHubRepository(repository)
+	if err != nil {
+		return "", err
 	}
 	const query = `query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){issue(number:$number){projectItems(first:10){nodes{project{title} fieldValueByName(name:"Status"){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}`
 	command := exec.CommandContext(ctx, "gh", "api", "graphql", "-f", "query="+query,
 		"-F", "owner="+owner, "-F", "name="+name, "-F", "number="+strconv.Itoa(issueNumber))
 	output, err := command.Output()
 	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && len(strings.TrimSpace(string(exitErr.Stderr))) > 0 {
+			return "", fmt.Errorf("read GitHub Project status for %s#%d: %s", repository, issueNumber, strings.TrimSpace(string(exitErr.Stderr)))
+		}
 		return "", fmt.Errorf("read GitHub Project status for %s#%d: %w", repository, issueNumber, err)
 	}
 	var response struct {
