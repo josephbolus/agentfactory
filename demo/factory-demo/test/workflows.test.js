@@ -27,6 +27,13 @@ const workflows = [
     labels: ['factory:bug-finder'],
   },
   {
+    name: 'review.md',
+    id: 'review',
+    title: 'Review a delivered pull request',
+    description: 'Verify a pull request against its issue and hand a human the shipping decision.',
+    labels: ['factory:ready-for-review'],
+  },
+  {
     name: 'dba/index-review.md',
     id: 'dba/index-review',
     title: 'Review database indexes',
@@ -70,5 +77,20 @@ test('DBA workflow routes blocked work to human review', async () => {
     'add `needs-human`',
   ]) {
     assert.match(content, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+});
+
+test('review workflow never merges and routes to a human', async () => {
+  const path = join(workflowRoot, '.factory', 'workflows', 'review.md');
+  const content = await readFile(path, 'utf8');
+
+  for (const expected of [
+    'never merge',
+    'never enable auto-merge',
+    '**Review**',
+    'remove `needs-agent`',
+    'add `needs-human`',
+  ]) {
+    assert.match(content, new RegExp(expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
   }
 });

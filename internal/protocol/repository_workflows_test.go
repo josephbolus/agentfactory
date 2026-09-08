@@ -3,6 +3,9 @@ package protocol
 import (
 	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -198,5 +201,53 @@ func TestRepositoryWorkflowCatalogRejectsAmbiguousMatches(t *testing.T) {
 	}
 	if _, err := catalog.MatchIssueLabels([]string{"team:qa"}); err == nil || !strings.Contains(err.Error(), "multiple") {
 		t.Fatalf("ambiguity error = %v", err)
+	}
+}
+
+// TestDefaultRepositoryWorkflows proves the documented default workflow set
+// (triage, implement, review) parses, routes by labels_all, and keeps the
+// shipping boundary with a human. It also fails when the canonical copies in
+// docs/examples drift from the demo repository that demonstrates them.
+func TestDefaultRepositoryWorkflows(t *testing.T) {
+	canonical := filepath.Join("..", "..", "docs", "examples", "repository-workflows")
+	demo := filepath.Join("..", "..", "demo", "factory-demo", ".factory", "workflows")
+	expected := []struct {
+		file   string
+		id     string
+		labels []string
+	}{
+		{file: "triage.md", id: "triage", labels: []string{"factory:ready-for-spec"}},
+		{file: "implement.md", id: "implement", labels: nil},
+		{file: "review.md", id: "review", labels: []string{"factory:ready-for-review"}},
+	}
+	for _, test := range expected {
+		content, err := os.ReadFile(filepath.Join(canonical, test.file))
+		if err != nil {
+			t.Fatal(err)
+		}
+		workflow, err := ParseRepositoryWorkflow(RepositoryWorkflowDir+test.file, "sha", content)
+		if err != nil {
+			t.Fatalf("%s: %v", test.file, err)
+		}
+		if workflow.ID != test.id || !reflect.DeepEqual(workflow.LabelsAll, test.labels) {
+			t.Fatalf("%s = id %q labels %#v; want %q %#v", test.file, workflow.ID, workflow.LabelsAll, test.id, test.labels)
+		}
+		mirror, err := os.ReadFile(filepath.Join(demo, test.file))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Equal(content, mirror) {
+			t.Fatalf("%s in docs/examples drifted from the demo workflow", test.file)
+		}
+	}
+	review, err := os.ReadFile(filepath.Join(canonical, "review.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	lower := strings.ToLower(string(review))
+	for _, want := range []string{"never merge", "never enable auto-merge", "needs-human", "**review**"} {
+		if !strings.Contains(lower, want) {
+			t.Fatalf("review workflow omits %q", want)
+		}
 	}
 }
