@@ -29,10 +29,10 @@ model = "gpt-5.6-sol"
 reasoning_effort = "medium"
 
 [[profiles]]
-name = "fallback-kimi"
+name = "fallback-deepseek"
 adapter = "pi"
-provider = "openrouter"
-model = "moonshotai/kimi-k3"
+provider = "deepseek-beta"
+model = "deepseek-v4.1-flash-expires-on-0910"
 reasoning_effort = "medium"
 
 [roles]

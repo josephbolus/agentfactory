@@ -77,9 +77,9 @@ demo project as `Ready`, and labels it `needs-agent` for intake.
 Requirements: authenticated `gh`, authenticated Codex and Claude Code CLIs,
 `curl`, and `lsof`.
 
-The demo also includes an optional Pi profile using OpenRouter's
-`moonshotai/kimi-k3`. Check the local Pi catalog and run a minimal request
-through each configured Claude model:
+The demo also includes an optional Pi profile using DeepSeek's
+`deepseek-v4.1-flash-expires-on-0910` (beta, expires 09-10). Check the local
+Pi catalog and run a minimal request through each configured Claude model:
 
 ```sh
 make test-local-runtimes

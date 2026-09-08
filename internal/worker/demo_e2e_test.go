@@ -94,7 +94,7 @@ if [ "${1:-}" = "--version" ]; then
 	printf '%s\n' '0.84.3'
 	exit 0
 fi
-printf '%s\n' 'provider model context max-out thinking images' 'openrouter moonshotai/kimi-k3 1.0M 131.1K yes yes'
+printf '%s\n' 'provider model context max-out thinking images' 'deepseek-beta deepseek-v4.1-flash-expires-on-0910 1.0M 131.1K yes yes'
 `)
 	writeTestExecutable(t, filepath.Join(bin, "curl"), "#!/bin/sh\nexit 0\n")
 	writeTestExecutable(t, filepath.Join(bin, "lsof"), "#!/bin/sh\nexit 0\n")
@@ -139,7 +139,7 @@ printf '%s\n' 'provider model context max-out thinking images' 'openrouter moons
 			{Name: "planner-opus", Adapter: protocol.RuntimeClaudeCode, Provider: "anthropic", Model: "opus", ReasoningEffort: "medium"},
 			{Name: "executor-terra", Adapter: protocol.RuntimeCodex, Provider: "openai", Model: "gpt-5.6-terra", ReasoningEffort: "medium"},
 			{Name: "reviewer-sol", Adapter: protocol.RuntimeCodex, Provider: "openai", Model: "gpt-5.6-sol", ReasoningEffort: "medium"},
-			{Name: "fallback-kimi", Adapter: protocol.RuntimePi, Provider: "openrouter", Model: "moonshotai/kimi-k3", ReasoningEffort: "medium"},
+			{Name: "fallback-deepseek", Adapter: protocol.RuntimePi, Provider: "deepseek-beta", Model: "deepseek-v4.1-flash-expires-on-0910", ReasoningEffort: "medium"},
 		},
 		Roles:         RolesConfig{Planner: "planner-opus", Executor: "executor-terra", Reviewer: "reviewer-sol"},
 		MaxConcurrent: 1, DataDirectory: workerData, SourceAccess: []string{"github"},
