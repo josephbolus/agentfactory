@@ -15,7 +15,16 @@ const (
 	RuntimePi                 = "pi"
 	RuntimeCodex              = "codex"
 	RuntimeClaudeCode         = "claude-code"
-	MaxBodyBytes              = 1 << 20
+
+	// ProjectStatus* are the GitHub Project status values the operator loop
+	// uses. Intake admits Work only when an issue is ProjectStatusReady.
+	ProjectStatusTodo       = "Todo"
+	ProjectStatusReady      = "Ready"
+	ProjectStatusInProgress = "In Progress"
+	ProjectStatusReview     = "Review"
+	ProjectStatusBlocked    = "Blocked"
+	ProjectStatusDone       = "Done"
+	MaxBodyBytes            = 1 << 20
 	// MaxClaimStageBytes leaves half of a claim response available for the
 	// Attempt, execution, Session, and repository metadata around its stages.
 	MaxClaimStageBytes        = MaxBodyBytes / 2

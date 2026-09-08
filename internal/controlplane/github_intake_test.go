@@ -11,8 +11,13 @@ import (
 type fakeGitHubIssues struct {
 	issues           map[string][]githubIssue
 	pullRequests     map[string][]githubPullRequest
+	projectStatus    map[int]string
 	calls            []string
 	pullRequestCalls []string
+}
+
+func (f *fakeGitHubIssues) IssueProjectStatus(_ context.Context, _ string, issueNumber int) (string, error) {
+	return f.projectStatus[issueNumber], nil
 }
 
 func (f *fakeGitHubIssues) ListPullRequests(_ context.Context, repository string) ([]githubPullRequest, error) {
@@ -36,9 +41,12 @@ func TestGitHubIssueIntakeAdmitsEachIssueOnce(t *testing.T) {
 	if _, err := store.setManagedRepositoryIssueIntake(context.Background(), repository.ID, true); err != nil {
 		t.Fatal(err)
 	}
-	source := &fakeGitHubIssues{issues: map[string][]githubIssue{
-		repository.RemoteIdentity: {{Number: 42, Title: "Fix case-insensitive search", URL: "https://github.com/acme/api/issues/42"}},
-	}}
+	source := &fakeGitHubIssues{
+		issues: map[string][]githubIssue{
+			repository.RemoteIdentity: {{Number: 42, Title: "Fix case-insensitive search", URL: "https://github.com/acme/api/issues/42"}},
+		},
+		projectStatus: map[int]string{42: protocol.ProjectStatusReady},
+	}
 	store.githubIssues = source
 
 	if err := store.PollGitHubIssues(context.Background()); err != nil {
@@ -185,5 +193,128 @@ func TestGitHubPullRequestWakeRequiresLinkedTerminalWork(t *testing.T) {
 	}
 	if replacementCount != 3 {
 		t.Fatalf("sessions after unrelated PR = %d, want 3", replacementCount)
+	}
+}
+
+// TestGitHubIssueIntakeRequiresProjectReady proves the second admission
+// condition: a needs-agent issue is admitted only while its Factory Project
+// status is Ready. Todo and missing items wait; Ready admits exactly once.
+func TestGitHubIssueIntakeRequiresProjectReady(t *testing.T) {
+	store := newTestStore(t)
+	repository, _, err := store.CreateManagedRepository(context.Background(), protocol.CreateManagedRepositoryRequest{
+		RemoteIdentity: "github.com/acme/api",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.setManagedRepositoryIssueIntake(context.Background(), repository.ID, true); err != nil {
+		t.Fatal(err)
+	}
+	source := &fakeGitHubIssues{
+		issues: map[string][]githubIssue{
+			repository.RemoteIdentity: {{Number: 42, Title: "Fix case-insensitive search", URL: "https://github.com/acme/api/issues/42"}},
+		},
+		projectStatus: map[int]string{42: protocol.ProjectStatusTodo},
+	}
+	store.githubIssues = source
+
+	if err := store.PollGitHubIssues(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.db.QueryRow(`SELECT COUNT(*) FROM runs`).Scan(new(int)); err != nil {
+		t.Fatal(err)
+	}
+	var runs int
+	if err := store.db.QueryRow(`SELECT COUNT(*) FROM runs`).Scan(&runs); err != nil {
+		t.Fatal(err)
+	}
+	if runs != 0 {
+		t.Fatalf("Todo issue admitted %d runs, want 0", runs)
+	}
+
+	source.projectStatus[42] = protocol.ProjectStatusReady
+	if err := store.PollGitHubIssues(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.db.QueryRow(`SELECT COUNT(*) FROM runs`).Scan(&runs); err != nil {
+		t.Fatal(err)
+	}
+	if runs != 1 {
+		t.Fatalf("Ready issue admitted %d runs, want 1", runs)
+	}
+
+	// A second poll of the same ready visit must not double-start Work.
+	if err := store.PollGitHubIssues(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.db.QueryRow(`SELECT COUNT(*) FROM runs`).Scan(&runs); err != nil {
+		t.Fatal(err)
+	}
+	if runs != 1 {
+		t.Fatalf("repeated poll admitted %d runs, want 1", runs)
+	}
+}
+
+// TestGitHubIssueIntakeRearmsAfterLabelRemoval proves one visit is one Work:
+// while the issue keeps needs-agent it runs once, removing the label ends the
+// visit, and re-adding it starts exactly one new Work.
+func TestGitHubIssueIntakeRearmsAfterLabelRemoval(t *testing.T) {
+	store := newTestStore(t)
+	repository, _, err := store.CreateManagedRepository(context.Background(), protocol.CreateManagedRepositoryRequest{
+		RemoteIdentity: "github.com/acme/api",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.setManagedRepositoryIssueIntake(context.Background(), repository.ID, true); err != nil {
+		t.Fatal(err)
+	}
+	issue := githubIssue{Number: 42, Title: "Fix case-insensitive search", URL: "https://github.com/acme/api/issues/42"}
+	source := &fakeGitHubIssues{
+		issues:        map[string][]githubIssue{repository.RemoteIdentity: {issue}},
+		projectStatus: map[int]string{42: protocol.ProjectStatusReady},
+	}
+	store.githubIssues = source
+
+	poll := func() int {
+		t.Helper()
+		if err := store.PollGitHubIssues(context.Background()); err != nil {
+			t.Fatal(err)
+		}
+		var runs int
+		if err := store.db.QueryRow(`SELECT COUNT(*) FROM runs`).Scan(&runs); err != nil {
+			t.Fatal(err)
+		}
+		return runs
+	}
+
+	if runs := poll(); runs != 1 {
+		t.Fatalf("first visit runs = %d, want 1", runs)
+	}
+	if runs := poll(); runs != 1 {
+		t.Fatalf("second poll of one visit runs = %d, want 1", runs)
+	}
+
+	// Finish the visit before the human re-labels the issue.
+	if _, err := store.db.Exec(`UPDATE sessions SET state = 'succeeded', terminal_at = ?`, store.now().UnixMilli()); err != nil {
+		t.Fatal(err)
+	}
+
+	// Removing needs-agent removes the issue from the poll and ends the visit.
+	source.issues[repository.RemoteIdentity] = nil
+	if runs := poll(); runs != 1 {
+		t.Fatalf("runs after label removal = %d, want 1", runs)
+	}
+	source.issues[repository.RemoteIdentity] = []githubIssue{issue}
+	if runs := poll(); runs != 2 {
+		t.Fatalf("runs after re-adding the label = %d, want 2", runs)
+	}
+
+	var distinctKeys int
+	if err := store.db.QueryRow(`SELECT COUNT(DISTINCT request_key) FROM runs`).Scan(&distinctKeys); err != nil {
+		t.Fatal(err)
+	}
+	if distinctKeys != 2 {
+		t.Fatalf("distinct request keys = %d, want 2", distinctKeys)
 	}
 }

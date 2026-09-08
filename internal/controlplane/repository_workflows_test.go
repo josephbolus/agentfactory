@@ -177,6 +177,11 @@ func (f *mappedWorkflowSource) ListIssues(context.Context, string) ([]githubIssu
 	return nil, nil
 }
 
+// IssueProjectStatus keeps routing tests focused on workflow selection.
+func (f *mappedWorkflowSource) IssueProjectStatus(_ context.Context, _ string, _ int) (string, error) {
+	return protocol.ProjectStatusReady, nil
+}
+
 func (*mappedWorkflowSource) ListPullRequests(context.Context, string) ([]githubPullRequest, error) {
 	return nil, nil
 }
@@ -257,6 +262,11 @@ func (f *fakeWorkflowSource) ListIssues(_ context.Context, repository string) ([
 	return f.issues[repository], nil
 }
 
+// IssueProjectStatus keeps routing tests focused on workflow selection.
+func (f *fakeWorkflowSource) IssueProjectStatus(_ context.Context, _ string, _ int) (string, error) {
+	return protocol.ProjectStatusReady, nil
+}
+
 func (fakeWorkflowSource) ListPullRequests(context.Context, string) ([]githubPullRequest, error) {
 	return nil, nil
 }
@@ -281,6 +291,11 @@ type failingWorkflowSource struct {
 
 func (f *failingWorkflowSource) ListIssues(_ context.Context, repository string) ([]githubIssue, error) {
 	return f.issues[repository], nil
+}
+
+// IssueProjectStatus keeps routing tests focused on workflow selection.
+func (f *failingWorkflowSource) IssueProjectStatus(_ context.Context, _ string, _ int) (string, error) {
+	return protocol.ProjectStatusReady, nil
 }
 
 func (*failingWorkflowSource) ListPullRequests(context.Context, string) ([]githubPullRequest, error) {
@@ -338,6 +353,11 @@ type rotatingWorkflowSource struct {
 
 func (f *rotatingWorkflowSource) ListIssues(_ context.Context, repository string) ([]githubIssue, error) {
 	return f.issues[repository], nil
+}
+
+// IssueProjectStatus keeps routing tests focused on workflow selection.
+func (f *rotatingWorkflowSource) IssueProjectStatus(_ context.Context, _ string, _ int) (string, error) {
+	return protocol.ProjectStatusReady, nil
 }
 
 func (*rotatingWorkflowSource) ListPullRequests(context.Context, string) ([]githubPullRequest, error) {

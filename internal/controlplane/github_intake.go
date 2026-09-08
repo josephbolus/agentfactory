@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"os/exec"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -16,6 +17,9 @@ import (
 )
 
 const githubIssuePollInterval = 30 * time.Second
+
+// factoryProjectTitle is the GitHub Project whose Status field gates intake.
+const factoryProjectTitle = "Factory"
 
 type githubIssue struct {
 	Number int                `json:"number"`
@@ -35,6 +39,7 @@ type githubPullRequest struct {
 type githubIssueSource interface {
 	ListIssues(context.Context, string) ([]githubIssue, error)
 	ListPullRequests(context.Context, string) ([]githubPullRequest, error)
+	IssueProjectStatus(context.Context, string, int) (string, error)
 }
 
 type githubCLI struct {
@@ -68,6 +73,56 @@ func (githubCLI) ListPullRequests(ctx context.Context, repository string) ([]git
 		return nil, fmt.Errorf("decode GitHub pull requests for %s: %w", repository, err)
 	}
 	return pullRequests, nil
+}
+
+// IssueProjectStatus reads the issue's Status field from the Factory GitHub
+// Project. A missing item or status returns an empty string.
+func (githubCLI) IssueProjectStatus(ctx context.Context, repository string, issueNumber int) (string, error) {
+	owner, name, found := strings.Cut(repository, "/")
+	if !found || owner == "" || name == "" {
+		return "", fmt.Errorf("invalid GitHub repository %q", repository)
+	}
+	const query = `query($owner:String!,$name:String!,$number:Int!){repository(owner:$owner,name:$name){issue(number:$number){projectItems(first:10){nodes{project{title} fieldValueByName(name:"Status"){... on ProjectV2ItemFieldSingleSelectValue{name}}}}}}}`
+	command := exec.CommandContext(ctx, "gh", "api", "graphql", "-f", "query="+query,
+		"-F", "owner="+owner, "-F", "name="+name, "-F", "number="+strconv.Itoa(issueNumber))
+	output, err := command.Output()
+	if err != nil {
+		return "", fmt.Errorf("read GitHub Project status for %s#%d: %w", repository, issueNumber, err)
+	}
+	var response struct {
+		Data struct {
+			Repository struct {
+				Issue struct {
+					ProjectItems struct {
+						Nodes []struct {
+							Project struct {
+								Title string `json:"title"`
+							} `json:"project"`
+							FieldValueByName *struct {
+								Name string `json:"name"`
+							} `json:"fieldValueByName"`
+						} `json:"nodes"`
+					} `json:"projectItems"`
+				} `json:"issue"`
+			} `json:"repository"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(output, &response); err != nil {
+		return "", fmt.Errorf("decode GitHub Project status for %s#%d: %w", repository, issueNumber, err)
+	}
+	fallback := ""
+	for _, node := range response.Data.Repository.Issue.ProjectItems.Nodes {
+		if node.FieldValueByName == nil || strings.TrimSpace(node.FieldValueByName.Name) == "" {
+			continue
+		}
+		if strings.EqualFold(strings.TrimSpace(node.Project.Title), factoryProjectTitle) {
+			return strings.TrimSpace(node.FieldValueByName.Name), nil
+		}
+		if fallback == "" {
+			fallback = strings.TrimSpace(node.FieldValueByName.Name)
+		}
+	}
+	return fallback, nil
 }
 
 func (s *Store) RunGitHubIssueIntake(ctx context.Context, logger *slog.Logger, interval time.Duration) {
@@ -104,6 +159,11 @@ func (s *Store) PollGitHubIssues(ctx context.Context) error {
 			continue
 		}
 		sort.Slice(issues, func(i, j int) bool { return issues[i].Number < issues[j].Number })
+		pollKey, err := newID()
+		if err != nil {
+			result = errors.Join(result, unavailable(err))
+			continue
+		}
 		var catalog protocol.RepositoryWorkflowCatalog
 		workflowSource, hasWorkflowSource := s.githubIssues.(githubWorkflowSource)
 		if hasWorkflowSource {
@@ -144,10 +204,39 @@ func (s *Store) PollGitHubIssues(ctx context.Context) error {
 				workflowID = workflow.ID
 				selectedWorkflow = workflow
 			}
+			projectStatus, err := s.githubIssues.IssueProjectStatus(ctx, repository.RemoteIdentity, issue.Number)
+			if err != nil {
+				result = errors.Join(result, err)
+				continue
+			}
+			if !strings.EqualFold(projectStatus, protocol.ProjectStatusReady) {
+				continue
+			}
+			_, active, err := s.githubIssueVisit(ctx, repository.ID, issue.Number)
+			if err != nil {
+				result = errors.Join(result, err)
+				continue
+			}
+			if active {
+				if err := s.touchGitHubIssueVisit(ctx, repository.ID, issue.Number, pollKey); err != nil {
+					result = errors.Join(result, err)
+				}
+				continue
+			}
+			visitKey, err := s.startGitHubIssueVisit(ctx, repository.ID, issue.Number, pollKey)
+			if err != nil {
+				result = errors.Join(result, err)
+				continue
+			}
+			rebuild, err := s.githubIssueNeedsRebuild(ctx, repository.ID, reference.SourceKey)
+			if err != nil {
+				result = errors.Join(result, err)
+				continue
+			}
 			request := protocol.BuildRequest{
-				RequestKey: "github-issue:" + reference.SourceKey,
+				RequestKey: "github-issue:" + reference.SourceKey + ":" + visitKey,
 				References: []string{reference.Reference}, Workflow: workflowID,
-				WorkflowSpecified: workflowID != "",
+				WorkflowSpecified: workflowID != "", Rebuild: rebuild,
 			}
 			var admission protocol.BuildAdmission
 			if hasWorkflowSource {
@@ -156,6 +245,9 @@ func (s *Store) PollGitHubIssues(ctx context.Context) error {
 				admission, err = s.admitGitHubIssueBuild(ctx, request, issue.Title)
 			}
 			if err != nil {
+				if releaseErr := s.clearGitHubIssueVisit(ctx, repository.ID, issue.Number); releaseErr != nil {
+					result = errors.Join(result, releaseErr)
+				}
 				result = errors.Join(result, err)
 				continue
 			}
@@ -170,6 +262,9 @@ func (s *Store) PollGitHubIssues(ctx context.Context) error {
 					result = errors.Join(result, err)
 				}
 			}
+		}
+		if err := s.clearMissingGitHubIssueVisits(ctx, repository.ID, pollKey); err != nil {
+			result = errors.Join(result, err)
 		}
 		if err := s.pollGitHubPullRequests(ctx, repository); err != nil {
 			result = errors.Join(result, err)
@@ -368,6 +463,95 @@ func (s *Store) clearMissingGitHubPRWakes(ctx context.Context, repositoryID, pol
 		return unavailable(err)
 	}
 	return nil
+}
+
+// githubIssueVisit reports the active visit for an issue. An inactive or
+// missing visit means the issue left the needs-agent label set and may start
+// new Work on its next match.
+func (s *Store) githubIssueVisit(ctx context.Context, repositoryID string, issueNumber int) (string, bool, error) {
+	var visitKey string
+	var active int
+	err := s.db.QueryRowContext(ctx, `
+		SELECT visit_key, active FROM github_issue_visits
+		WHERE repository_id = ? AND issue_number = ?
+	`, repositoryID, issueNumber).Scan(&visitKey, &active)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, unavailable(err)
+	}
+	return visitKey, active == 1, nil
+}
+
+func (s *Store) startGitHubIssueVisit(ctx context.Context, repositoryID string, issueNumber int, pollKey string) (string, error) {
+	visitKey, err := newID()
+	if err != nil {
+		return "", unavailable(err)
+	}
+	_, err = s.db.ExecContext(ctx, `
+		INSERT INTO github_issue_visits(repository_id, issue_number, visit_key, active, last_seen_key)
+		VALUES (?, ?, ?, 1, ?)
+		ON CONFLICT(repository_id, issue_number) DO UPDATE SET
+			visit_key = excluded.visit_key, active = 1, last_seen_key = excluded.last_seen_key
+	`, repositoryID, issueNumber, visitKey, pollKey)
+	if err != nil {
+		return "", unavailable(err)
+	}
+	return visitKey, nil
+}
+
+func (s *Store) touchGitHubIssueVisit(ctx context.Context, repositoryID string, issueNumber int, pollKey string) error {
+	_, err := s.db.ExecContext(ctx, `
+		UPDATE github_issue_visits SET last_seen_key = ?
+		WHERE repository_id = ? AND issue_number = ?
+	`, pollKey, repositoryID, issueNumber)
+	if err != nil {
+		return unavailable(err)
+	}
+	return nil
+}
+
+func (s *Store) clearGitHubIssueVisit(ctx context.Context, repositoryID string, issueNumber int) error {
+	_, err := s.db.ExecContext(ctx, `
+		DELETE FROM github_issue_visits WHERE repository_id = ? AND issue_number = ?
+	`, repositoryID, issueNumber)
+	if err != nil {
+		return unavailable(err)
+	}
+	return nil
+}
+
+// clearMissingGitHubIssueVisits rearms issues that left the label set.
+func (s *Store) clearMissingGitHubIssueVisits(ctx context.Context, repositoryID, pollKey string) error {
+	_, err := s.db.ExecContext(ctx, `
+		UPDATE github_issue_visits SET active = 0
+		WHERE repository_id = ? AND last_seen_key != ?
+	`, repositoryID, pollKey)
+	if err != nil {
+		return unavailable(err)
+	}
+	return nil
+}
+
+// githubIssueNeedsRebuild reports whether this source already has a terminal
+// Work with no successor, which is what a new visit must chain from.
+func (s *Store) githubIssueNeedsRebuild(ctx context.Context, repositoryID, sourceKey string) (bool, error) {
+	var exists int
+	err := s.db.QueryRowContext(ctx, `
+		SELECT EXISTS(
+			SELECT 1 FROM sessions AS candidate
+			WHERE candidate.repository_id = ? AND candidate.source_kind = 'github_issue' AND candidate.source_key = ?
+			  AND candidate.state IN ('ready', 'succeeded', 'failed', 'no-change', 'cancelled')
+			  AND NOT EXISTS (
+				SELECT 1 FROM sessions AS child WHERE child.predecessor_work_id = candidate.id
+			  )
+		)
+	`, repositoryID, sourceKey).Scan(&exists)
+	if err != nil {
+		return false, unavailable(err)
+	}
+	return exists == 1, nil
 }
 
 func (s *Store) issueIntakeRepositories(ctx context.Context) ([]protocol.ManagedRepository, error) {

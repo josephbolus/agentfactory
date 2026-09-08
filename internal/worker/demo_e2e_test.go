@@ -247,6 +247,9 @@ case "${1:-} ${2:-}" in
 	'api user')
 		printf '%s\n' '{"login":"factory-bot"}'
 		;;
+	'api graphql')
+		printf '%s\n' '{"data":{"repository":{"issue":{"projectItems":{"nodes":[{"project":{"title":"Factory"},"fieldValueByName":{"name":"Ready"}}]}}}}}'
+		;;
 	'api repos/josephbolus/factory-demo')
 		printf '%s\n' '{"default_branch":"main"}'
 		;;
